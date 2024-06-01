@@ -76,9 +76,10 @@ async def get_attraction(page:int= Query(1, alias="page"), keyword:str=Query("",
 			#transport 是direction
 			query='''SELECT id, name, category, description, address, 
 				transport, mrt, lat, lng, image FROM
-				attraction WHERE name LIKE %s LIMIT %s OFFSET %s 
+				attraction WHERE name LIKE %s OR mrt LIKE %s
+				LIMIT %s OFFSET %s 
 				'''
-			cursor.execute(query,(f'%{keyword}%',per_pageInfo,offset))
+			cursor.execute(query,(f'%{keyword}%',f'%{keyword}%',per_pageInfo,offset))
 		else:
 			query='''
 				SELECT id, name, category, description, address, 
