@@ -5,12 +5,14 @@ from fastapi.responses import FileResponse
 from typing import List, Optional
 from pydantic import BaseModel
 import mysql.connector
-from datetime import datetime
+
 
 
 app=FastAPI()
 
-#建立資料庫類別設定
+
+
+# 建立資料庫類別設定
 class Attraction(BaseModel):
 	id: int
 	name: str
@@ -37,8 +39,9 @@ db={
 	"user":"root",
 	"host":"localhost",
 	"database":"taipei",
-	"password":"12345678"
+	"password":"ASdf1234."
 }
+
 def connect_sql():
 	con = mysql.connector.connect(**db)
 	return con
