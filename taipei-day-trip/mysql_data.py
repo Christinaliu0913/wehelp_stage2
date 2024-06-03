@@ -28,7 +28,7 @@ def read_json(file_path):
             description = i['description']
             transport = i.get('direction',None)
             date = datetime.datetime.strptime(i.get('date',None),'%Y/%m/%d').date()
-            image = filter_images(i.get('file', None))
+            images = filter_images(i.get('file', None))
             serial_no = i.get('SERIAL_NO',None)
             address = i.get('address',None)
             ref_wp = i.get('REF_WP', None)
@@ -42,14 +42,14 @@ def read_json(file_path):
             poi = i.get('POI',None)
             idpt= i.get('idpt',None)
             
-            if image: 
+            if images: 
                 cursor=con.cursor()
                 cursor.execute('''
                     INSERT INTO attraction (
-                               name, rate, lng, transport, lat, description, date, image,
+                               name, rate, lng, transport, lat, description, date, images,
                                serial_no, address, ref_wp, avBegin, avEnd, langinfo, mrt, rowNumber, category, memo_time, poi, idpt
                     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s)
-                ''', (name, rate, lng, transport, lat, description, date, image,
+                ''', (name, rate, lng, transport, lat, description, date, images,
                       serial_no, address, ref_wp, avBegin, avEnd, langinfo, mrt, rowNumber, category, memo_time, poi, idpt))
                 con.commit()
                 cursor.close()

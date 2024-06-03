@@ -23,7 +23,7 @@ class Attraction(BaseModel):
 	mrt: Optional[str]
 	lat: float
 	lng: float
-	image: List[str]
+	images: List[str]
 
 class AttractionResponse(BaseModel):
 	nextpage:Optional[int]
@@ -39,7 +39,7 @@ db={
 	"user":"root",
 	"host":"localhost",
 	"database":"taipei",
-	"password":"12345678"
+	"password":"ASdf1234."
 }
 
 def connect_sql():
@@ -78,7 +78,7 @@ async def get_attraction(page:int= Query(0, alias="page"), keyword:str=Query("",
 		if keyword:
 			#transport 是direction
 			query='''SELECT id, name, category, description, address, 
-				transport, mrt, lat, lng, image FROM
+				transport, mrt, lat, lng, images FROM
 				attraction WHERE name LIKE %s OR mrt LIKE %s
 				LIMIT %s OFFSET %s 
 				'''
@@ -86,15 +86,15 @@ async def get_attraction(page:int= Query(0, alias="page"), keyword:str=Query("",
 		else:
 			query='''
 				SELECT id, name, category, description, address, 
-				transport, mrt, lat, lng, image FROM
+				transport, mrt, lat, lng, images FROM
 				attraction LIMIT %s OFFSET %s
 				'''
 			cursor.execute(query,(per_pageInfo,offset))
 		attractions= cursor.fetchall()
 		#圖片部分格式化為List
 		for attraction in attractions:
-			if attraction["image"]:
-				attraction["image"]= attraction['image'].split(',')
+			if attraction["images"]:
+				attraction["images"]= attraction['images'].split(',')
 		#獲取總數據條目來計算下一頁 next page
 		if keyword:
 			cursor.execute(
@@ -131,7 +131,7 @@ async  def get_attractionID(attractionID:int):
 		cursor.execute(
 			'''
 			SELECT id, name, category, description, address, 
-				transport, mrt, lat, lng, image FROM
+				transport, mrt, lat, lng, images FROM
 				attraction WHERE id = %s
 			''',(attractionID,)
 		)
@@ -140,8 +140,8 @@ async  def get_attractionID(attractionID:int):
 		if not attraction:
 			return JSONResponse(content={"error":True,"message":"景點編號不正確"},status_code=400)
 		
-		if attraction['image']:
-			attraction['image']= attraction['image'].split(",")
+		if attraction['images']:
+			attraction['images']= attraction['images'].split(",")
 		return JSONResponse(content={"data":attraction},status_code=200)
 	except mysql.connector.Error:
 		return JSONResponse(content={"error":True,'message':'伺服器內部錯誤'},status_code=500)
