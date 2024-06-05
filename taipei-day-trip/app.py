@@ -70,7 +70,7 @@ async def get_attraction(page:int= Query(0, alias="page"), keyword:str=Query("",
 	#keyword用來完全比對捷運站名稱、或模糊比對景點名稱的關鍵字，沒有給定則不做篩選
 	try: 
 		per_pageInfo=12 #每頁12筆資料
-		offset = max(0, (page - 1) * per_pageInfo) #mysql限制offset從第幾筆資料開始
+		offset = max(0, (page) * per_pageInfo) #mysql限制offset從第幾筆資料開始
 		con=connect_sql()
 		cursor=con.cursor(dictionary=True)#結果以字典形式返回
 
