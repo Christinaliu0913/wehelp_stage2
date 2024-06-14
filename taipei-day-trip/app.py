@@ -2,15 +2,21 @@ from fastapi import FastAPI, Request, Query, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from typing import List, Optional
 from pydantic import BaseModel
 import mysql.connector
-
-
+from fastapi.middleware.cors import CORSMiddleware
 
 app=FastAPI()
-
-
+app.mount("/static", StaticFiles(directory="static"), name="static")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 允许所有来源。如果需要限制来源，可以将 "*" 替换为特定来源。
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # 建立資料庫類別設定
 class Attraction(BaseModel):
@@ -41,7 +47,6 @@ db={
 	"database":"taipei",
 	"password":"ASdf1234."
 }
-
 def connect_sql():
 	con = mysql.connector.connect(**db)
 	return con
@@ -50,7 +55,7 @@ def connect_sql():
 # 可加不可動！
 @app.get("/", include_in_schema=False)
 async def index(request: Request):
-	return FileResponse("./static/index.html", media_type="text/html")
+	return FileResponse("static/index.html", media_type="text/html")
 @app.get("/attraction/{id}", include_in_schema=False)
 async def attraction(request: Request, id: int):
 	return FileResponse("./static/attraction.html", media_type="text/html")
@@ -177,4 +182,4 @@ async def mrt_station():
 
 if __name__=='__main__':
 	import uvicorn
-	uvicorn.run("app:app", host='0.0.0.0', port=8000)
+	uvicorn.run(app, host='0.0.0.0', port=8000)

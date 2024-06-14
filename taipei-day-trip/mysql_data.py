@@ -58,8 +58,6 @@ def read_json(file_path):
 
 
 
-
-
 if __name__ == '__main__':
     file_path = 'data/taipei-attractions.json'
     read_json(file_path)

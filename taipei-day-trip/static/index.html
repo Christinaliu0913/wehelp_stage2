@@ -2,10 +2,78 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <link rel="stylesheet" type='text/css' href="/static/style.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Index</title>
 </head>
-<body>
-  
+<body class="body">
+  <div class="wrapper">
+    <header>
+      <nav class="nav">
+        <h2 class="nav-title">台北一日遊</h2>
+        <ul class="nav-list">
+          <li class="nav-list-item">預定行程</li>
+          <li class="nav-list-item" onclick="signIn()">登入/註冊</li>
+        </ul>
+      </nav>
+    </header>
+    <div class="search">
+      <form class="search-form" id="search-form">
+        <h2 class="search-form-title">輕鬆享受台北一日悠閒</h2>
+        <p>探索每個角落，體驗程式的深度旅遊行程</p>
+        <div class="search-form-input">
+          <input id="search-keyword" type="text" placeholder="請輸入景點名稱">
+          <button class="search-form-svg" type="submit">
+          <img src="/static/img/search.png" alt=""></button>
+        </div>
+      </form>
+    </div>
+    <main>
+      <div class="listBar">
+        <div class="listBar-box">
+          <button class="listBar-left-buttom" onclick="moveLeft()"><p class="arrow left"></p></button>
+          <div class="listBar-mrt" id="mrts-list">            
+          </div>
+          <button class="listBar-right-buttom" onclick="moveRight()"><p class="arrow right"></p></button>
+        </div>
+      </div>
+      <section class="attraction">
+        <div class="attraction-box">
+        </div>
+      </section>
+    </main>
+    <div class="overlay" id="overlay-signin"></div>
+    <div class="signin">
+        <div class="signin-box" id="signin">
+          <div class="signin-form">
+            <div class="signin-topbar"></div>
+            <button class="signinup-back" onclick="signinClose()"><img src="/static/img/close.png" alt=""></button>
+            <h3>登入會員帳號</h3>
+            <div ><input type="text" placeholder="    輸入電子信箱" ></div>
+            <div ><input type="text" placeholder="    輸入密碼" ></div>
+            <button class="signinup-handout">登入帳戶</button>
+            <p onclick="signUp()">還沒有帳戶？點此註冊</p>
+          </div>
+        </div>
+    </div>
+    <div class="signup">
+      <div class="signup-box" id="signup">
+        <div class="signup-form">
+          <div class="signup-topbar"></div>
+          <button class="signinup-back" onclick="signupClose()"><img src="/static/img/close.png" alt=""></button>
+          <h3>註冊會員帳號</h3>
+          <div ><input type="text" placeholder="    輸入姓名" ></div>
+          <div ><input type="text" placeholder="    輸入電子信箱" ></div>
+          <div ><input type="text" placeholder="    輸入密碼" ></div>
+          <button class="signinup-handout">註冊新帳戶</button>
+          <p onclick="signIn()">已經有帳戶了？點此進入</p>
+        </div>
+      </div>
+  </div>
+  </div>
+  <footer class="footer"><p class="footer-text">COPYRIGHT©2024台北一日遊</p></footer>
+  <script src="/static/index.js">
+  </script>
 </body>
+
 </html>
