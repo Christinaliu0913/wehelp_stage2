@@ -388,6 +388,46 @@ header{
     z-index: 9999;
     display: none;
 }
+/*attraction.html-----------------*/
+
+.profile{
+    display: flex;
+    justify-content: center;
+}
+.attraction-intro{
+    flex: auto;
+    max-width: 1200px;
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    margin-top: 54px;
+    margin-left: 10px;
+    margin-right: 10px;
+    gap: 15px;
+    
+}
+
+.attraction-intro-img{
+    background-color: #00000025;
+    max-width: 600px;
+    height: 400px;
+}
+.attraction-intro-info form{
+    background-color: #666666;
+    max-width: 600px;
+    height: 302px;
+}
+
+.attraction-detail{
+    display: flex;
+    justify-content: center;
+    align-content: center;
+}
+
+.attraction-detail-box{
+    max-width: 1200px;
+    margin: 10px;
+}
+
 
 /*footer*/
 .footer{
@@ -403,6 +443,8 @@ header{
 .footer-text{
     color: white;
 }
+
+
 
 /*RWD*/
 @media(max-width:768px){

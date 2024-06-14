@@ -7,7 +7,7 @@ import re
 con=mysql.connector.connect(
     host='localhost',
     user="root",
-    password="ASdf1234.",
+    password="12345678",
     database='taipei'
 )
 #過濾png/jpg的檔案

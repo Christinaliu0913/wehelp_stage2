@@ -27,7 +27,11 @@
     document.querySelector('.overlay').style.display = 'none';
   }
 
-  //------------------KeywordSearch-----------------------
+  //|------------------KeywordSearch-----------------------|
+
+  let nextPage = null;
+  let observe = null;
+  let keyword = '';
 
   //防止搜尋關鍵字時重載更新頁面
   document.getElementById('search-form').addEventListener('submit',function(event){
@@ -38,40 +42,37 @@
 
   //關鍵字搜尋
   function keywordSearch(){
-    const keyword = document.getElementById('search-keyword').value.trim();
+    keyword = document.getElementById('search-keyword').value.trim();
     const attractionsDiv = document.querySelector('.attraction-box');
     attractionsDiv.innerHTML='';//清空目前的景點卡面
     nextPage =null;//重置下一頁
 
-    if(keyword !==''){
-      const keywordURL = `/api/attractions?keyword=${encodeURIComponent(keyword)}`;
-      fetch(keywordURL).then(res=>res.json()).then(result=> {
-        attractionsAPI(result);
-        nextPage=result.nextPage;
-        if(observe)observe.disconnect();
-          setupInfiniteScroll();//重新設置無限滾動
-        }).catch(error=>{
-          console.error('Error searching attractions:', error);
-        })
-    }else{
-      fetch(attractionsURL).then(res=>res.json()).then(result=> {
-        attractionsAPI(result);
-        nextPage=result.nextPage;
-        if(observe)observe.disconnect();
-          setupInfiniteScroll();//重新設置無限滾動
-        }).catch(error=>{
-          console.error('Error searching attractions:', error);
-        })
+    let keywordURL = `/api/attractions`;
 
-    }
-  };
+    if(keyword !==''){
+      keywordURL += `?keyword=${encodeURIComponent(keyword)}`;
+    };
+
+    fetch(keywordURL)
+      .then(res=>res.json())
+      .then(result=> {
+        console.log('API response',result)//ck
+        attractionsAPI(result);
+        nextPage=result.nextPage;
+        if(observe)observe.disconnect();
+        setupInfiniteScroll();//重新設置無限滾動
+      })
+      .catch(error=>{
+          console.error('Error searching attractions:', error);
+      });
+  }
 
 
 
   //----------------attractions-----------------------
   //取得attractions 資訊
-  let nextPage = null;
-  const attractionsURL='/api/attractions'
+  
+  const attractionsURL = '/api/attractions'
   window.addEventListener('load',function(){
     fetch(attractionsURL).then(res=>{
       return res.json();
@@ -81,14 +82,15 @@
       nextPage = result.nextPage;
       //設置無限滾動
       setupInfiniteScroll();
+      
     }).catch(error => {
       console.error('Error fetching attractions:', error);
     });
   });
 
-  //----------------設置無限滾動
+  //----------------設置無限滾動---------------------------|
   function setupInfiniteScroll(){
-    const observe = new IntersectionObserver(entries=>{
+    observe = new IntersectionObserver(entries=>{
       if(entries[0].isIntersecting && nextPage !== null){
         loadMoreAttractions();
       }
@@ -99,14 +101,18 @@
   }
   //載入更多圖片
   function loadMoreAttractions(){
-    const nextPageURL = `/api/attractions?page=${nextPage}`;
+    let nextPageURL = `/api/attractions?page=${nextPage}`;
+    if(keyword !==''){
+      nextPageURL +=`&keyword=${encodeURIComponent(keyword)}`
+    }
     fetch(nextPageURL)
       .then(res=>{
         return res.json();
       }).then(result =>{
         attractionsAPI(result);
+        console.log('other',result)
         nextPage = result.nextPage;//更新下一頁的值
-        if (nextPage==null){
+        if (nextPage==null && observe){
           observe.disconnect();//最後一頁停止觀察
         }
       }).catch(error => {
@@ -210,5 +216,4 @@
         keywordSearch();//觸發搜尋
     })
     parentDiv.appendChild(mrtListItem)
-  }
-
+  };

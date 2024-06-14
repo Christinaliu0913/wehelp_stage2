@@ -2,10 +2,55 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <link rel="stylesheet" type='text/css' href="/static/style.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Attraction</title>
 </head>
 <body>
-  
+  <body class="body">
+    <div class="wrapper">
+      <header>
+        <nav class="nav">
+          <h2 class="nav-title">台北一日遊</h2>
+          <ul class="nav-list">
+            <li class="nav-list-item">預定行程</li>
+            <li class="nav-list-item" onclick="signIn()">登入/註冊</li>
+          </ul>
+        </nav>
+      </header>
+
+
+      <main class="profile">
+        <div class="attraction-intro">
+          <div class="attraction-intro-img"></div>
+          <div class="attraction-intro-info">
+            <h2>test</h2>
+            <div>cat + mrt</div>
+            <form action="post">
+              <div>訂購導覽行程</div>
+              <div>以此景點為中心的一日行程，帶您探索城市角落故事</div>
+              <div>選擇日期</div>
+            </form>
+          </div>
+        </div>  
+      </main>
+      <hr>
+      <div class="attraction-detail">
+        <div class="attracion-detail-box">
+          <div>這裡是description</div>
+          <div>景點地址：</div>
+          <div>adress</div>
+          <div>交通方式：</div>
+          <div>捷運站名： 這裡是捷運站名</div>
+        </div>
+      </div>
+
+
+    </div>
+
+
+    <footer class="footer"><p class="footer-text">COPYRIGHT©2024台北一日遊</p></footer>
 </body>
+<script src="/static/index.js">
+</script>
 </html>
