@@ -24,6 +24,7 @@ header{
     display: flex;
     justify-content: center;
     background-color: white;
+    box-shadow: 0px 0px 10px #66666650;
 }
 .nav{
     flex:auto;
@@ -122,7 +123,6 @@ header{
     height: 3px;
 
 }
-
 .left{
     transform: rotate(135deg);
     margin-left: 2px;
@@ -388,45 +388,234 @@ header{
     z-index: 9999;
     display: none;
 }
-/*attraction.html-----------------*/
+/*--------------Attraction.html-----------------*/
 
 .profile{
     display: flex;
     justify-content: center;
+}
+.profile > div{
+    color:#666666;
 }
 .attraction-intro{
     flex: auto;
     max-width: 1200px;
     display: grid;
     grid-template-columns: repeat(2,1fr);
-    margin-top: 54px;
+    margin-top: 65px;
     margin-left: 10px;
     margin-right: 10px;
-    gap: 15px;
-    
+    gap: 2%;
+    position: relative;
 }
 
+/*-----Attraction IMG------*/
+.attraction-intro-imgButtom{
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 100%;
+    border: 2px solid #448899;
+    background-color: #ffffffae;
+    cursor: pointer;
+}
+.attraction-intro-imgButtom:hover{
+    transition: 0.25s;
+    background-color: #ffffffe1;
+    width: 35px;
+    height: 35px;
+}
+.imgleft{
+    position: absolute;
+    top: 50%;
+    left: 10px;
+}.imgright{
+    position: absolute;
+    top: 50%;
+    right: 10px;
+}
+/*輪播照片*/
 .attraction-intro-img{
     background-color: #00000025;
     max-width: 600px;
-    height: 400px;
+    height: 406px;
+    display: flex;
+    align-content: center;
+    position: relative;
+    border-radius: 5px;
+    box-shadow: 0px 0px 10px #66666650;
+    overflow: hidden;
 }
-.attraction-intro-info form{
-    background-color: #666666;
-    max-width: 600px;
-    height: 302px;
+.attraction-intro-img-container{
+    width: 100%;
+    height: auto;
+    display: flex;
+    transition: transform 1s ease-in-out;
 }
-
-.attraction-detail{
+.attraction-intro-img-carouselIMG{
+    min-width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    display:none;/*預設看不到*/
+}
+.attraction-intro-img-carouselIMG.active{
+    display: block; 
+}
+.attraction-intro-img-indicators{
     display: flex;
     justify-content: center;
-    align-content: center;
+    position:absolute;
+    bottom: 10px;
+    width: 100%;
+}
+.attraction-intro-img-indicator{
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #ffffff5b;
+    cursor: pointer;
+    margin: 5px;
+    
+}
+.attraction-intro-img-indicator.active{
+    width: 14px;
+    height: 14px;
+    background-color: #448899;
+    box-shadow: 0px 0px 8px #ffffff;
+}
+
+
+/*------Intro-Info---------*/
+
+
+.attraction-intro-info h3{
+    font-size: 24px;
+    margin-block-start: 3px;
+    margin-block-end: 5px;
+    margin-left: 5px;
+}
+.attraction-intro-info-content{
+    margin: 5px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    font-size: 16px;
+}
+.attraction-intro-info-form {
+    background-color: #E8E8E8;
+    max-width: 600px;
+    height: 304px;
+    border-radius: 5px;
+    display: flex;
+    padding:10px;
+    box-sizing: border-box;
+    box-shadow: 0px 0px 5px #66666650;
+
+}
+.attraction-intro-info-form form{
+    margin-left:15px;
+    margin-right: 15px;
+    height: 100%;
+    flex: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.attraction-intro-info-form form  p{
+    font-weight: normal;
+    margin-block-start: 0;
+    margin-block-end: 0;
+}
+.attraction-intro-info-form form > div{
+    font-weight: bold;
+}
+.datetype label{
+    display: flex;
+    align-items: center;
+    margin-right: 10px;
+}
+.datetype input[type='radio']{
+    height: 20px;
+    width: 20px;
+    cursor: pointer;
+}
+.datetype input[type='radio']:checked {
+    background-color: #448899;
+    border: 2px solid #448899;
+  }
+
+.attraction-intro-info-form button{
+    height: 36px;
+    width:100%;
+    border: 0;
+    border-radius: 5px;
+    background-color: #448899;
+    cursor: pointer;
+    color: white;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    font-size: 19px;
+    font-weight: normal;
+}
+
+.date input{
+    border: 0;
+    width: 190px;
+    height: 35px;
+    padding: 2px;
+    border-radius: 5px;
+}
+
+::-webkit-calendar-picker-indicator{
+    height: 25px;
+    width: 25px;
+
+}
+.datetype{
+    display: flex;
+}
+.fee{
+    display: flex;
+}
+
+
+/*-----Detail-----*/
+
+.middleLine{
+    max-width: 1200px;
+    border: 1px solid #E8E8E8;
+    width: 98vw;
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+.attraction-detail{
+    display: flex;
+    margin: 10px;
+    justify-content: center;
+}
+
+.attraction-detail > div{
+    color: #666666;
 }
 
 .attraction-detail-box{
+    margin-left: 5px;
     max-width: 1200px;
-    margin: 10px;
+    flex: auto;
+
 }
+
+.attraction-detail-box div{
+    padding: 10px;
+    font-weight: bold;
+}
+
+.attraction-detail-box p{
+    margin-block-start: 5px;
+    margin-block-end: 0px;
+    font-weight: normal;
+}
+
 
 
 /*footer*/
@@ -439,6 +628,7 @@ header{
     align-items: center;
     margin-top: 50px;
     flex-shrink: 0;
+    box-shadow: 0px 0px 10px #66666650;
 }
 .footer-text{
     color: white;
@@ -456,6 +646,10 @@ header{
     .attraction-box{
         grid-template-columns: repeat(2,1fr); 
     }
+    .attraction-intro{
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto;
+    }
     .search-form-input input{
         width: 255px;
         height: 46px;
@@ -469,5 +663,9 @@ header{
 @media(max-width:375px)and (min-width:300px){
     .attraction-box{
         grid-template-columns: repeat(1,1fr); 
+    }
+    .attraction-intro{
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto;
     }
 }
