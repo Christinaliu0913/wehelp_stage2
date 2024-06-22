@@ -7,7 +7,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 import mysql.connector
 from fastapi.middleware.cors import CORSMiddleware
-
+from fastapi.exceptions import RequestValidationError
 app=FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.add_middleware(
@@ -66,9 +66,30 @@ async def booking(request: Request):
 async def thankyou(request: Request):
 	return FileResponse("./static/thankyou.html", media_type="text/html")
 
+# 處理錯誤->導回首頁
+
+### 當請求驗證錯誤的時候 
+@app.exception_handler(RequestValidationError)
+async def validation_exception(req: Request, exc: RequestValidationError):
+	return RedirectResponse(url='/')
+
+### 處理http異常
+# @app.exception_handler(HTTPException)
+# async def http_exception(req: Request, exc: HTTPException):
+# 	if exc.status_code in {400, 422, 404}:
+# 		return RedirectResponse(url='/')
+# 	return JSONResponse(
+# 		status_code=exc.status_code,
+# 		content={
+# 			"message":exc.detail
+# 		},
+# 	)
+### 處理其他異常
+@app.exception_handler(Exception)
+async def global_exception(req: Request, exc: Exception):
+	return RedirectResponse(url='/')
 
 #API
-
 #取得景點資料表
 @app.get("/api/attractions",response_model=AttractionResponse)
 async def get_attraction(page:int= Query(0, alias="page"), keyword:str=Query("",alias="keyword")):
@@ -150,7 +171,7 @@ async  def get_attractionID(attractionID:int):
 		return JSONResponse(content={"data":attraction},status_code=200)
 	except mysql.connector.Error:
 		return JSONResponse(content={"error":True,'message':'伺服器內部錯誤'},status_code=500)
-	finally:
+	finally: 
 		cursor.close()
 		con.close()
 

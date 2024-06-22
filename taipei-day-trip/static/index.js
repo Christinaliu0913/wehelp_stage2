@@ -1,3 +1,5 @@
+//|------------------登入/註冊-----------------------|
+
  //左右滑動
  function moveLeft(){
     document.getElementById("mrts-list").scrollLeft -= 450;
@@ -27,10 +29,42 @@
     document.querySelector('.overlay').style.display = 'none';
   }
 
+  //----------------設置無限滾動---------------------------|
+let observer = null;
+
+  function setupInfiniteScroll(){
+    observer = new IntersectionObserver(entries=>{
+      if(entries[0].isIntersecting && nextPage !== null){
+        loadMoreAttractions();
+      }
+    },{
+     rootMargin: '0px 0px -10px 0px'// 提前100pxload下一頁
+    });
+    observer.observe(document.querySelector('.footer'));//觀察到footer後
+  }
+  //載入更多圖片
+  function loadMoreAttractions(){
+    let nextPageURL = `/api/attractions?page=${nextPage}`;
+    if(keyword !==''){
+      nextPageURL +=`&keyword=${encodeURIComponent(keyword)}`
+    }
+    fetch(nextPageURL)
+      .then(res=>{
+        return res.json();
+      }).then(result =>{
+        attractionsAPI(result);
+        console.log('other',result)
+        nextPage = result.nextPage;//更新下一頁的值
+        if (nextPage==null && observer){
+          observer.disconnect();//最後一頁停止觀察
+        }
+      }).catch(error => {
+        console.error('Error fetching next page of attractions:', error);
+      });
+  }
   //|------------------KeywordSearch-----------------------|
 
   let nextPage = null;
-  let observe = null;
   let keyword = '';
 
   //防止搜尋關鍵字時重載更新頁面
@@ -59,7 +93,7 @@
         console.log('API response',result)//ck
         attractionsAPI(result);
         nextPage=result.nextPage;
-        if(observe)observe.disconnect();
+        if(observer) observer.disconnect();
         setupInfiniteScroll();//重新設置無限滾動
       })
       .catch(error=>{
@@ -69,11 +103,14 @@
 
 
 
-  //----------------attractions-----------------------
-  //取得attractions 資訊
+  //----------------attractions-----------------------|
+  
   
   const attractionsURL = '/api/attractions'
+  const mrtsURL='/api/mrts'
   window.addEventListener('load',function(){
+
+  //取得attractions 資訊
     fetch(attractionsURL).then(res=>{
       return res.json();
     }).then(result =>{
@@ -86,40 +123,21 @@
     }).catch(error => {
       console.error('Error fetching attractions:', error);
     });
+
+
+  //取得mrt資訊
+    fetch(mrtsURL).then(res=>{
+      return res.json();
+    }).then(result =>{
+      mrtsAPI(result)
+    }).catch(error=>{
+      console.error('Error fetching mrts:',error);
+    });
+  
   });
 
-  //----------------設置無限滾動---------------------------|
-  function setupInfiniteScroll(){
-    observe = new IntersectionObserver(entries=>{
-      if(entries[0].isIntersecting && nextPage !== null){
-        loadMoreAttractions();
-      }
-    },{
-     rootMargin: '0px 0px -10px 0px'// 提前100pxload下一頁
-    });
-    observe.observe(document.querySelector('.footer'));//觀察到footer後
-  }
-  //載入更多圖片
-  function loadMoreAttractions(){
-    let nextPageURL = `/api/attractions?page=${nextPage}`;
-    if(keyword !==''){
-      nextPageURL +=`&keyword=${encodeURIComponent(keyword)}`
-    }
-    fetch(nextPageURL)
-      .then(res=>{
-        return res.json();
-      }).then(result =>{
-        attractionsAPI(result);
-        console.log('other',result)
-        nextPage = result.nextPage;//更新下一頁的值
-        if (nextPage==null && observe){
-          observe.disconnect();//最後一頁停止觀察
-        }
-      }).catch(error => {
-        console.error('Error fetching next page of attractions:', error);
-      });
-  }
-  //----------------attractionsCard-----------------------------
+  
+  //----------------attractionsCard-----------------------------|
   function attractionsAPI(data){
     const attractionsData = data.data;
     const attractionsDiv = document.querySelector('.attraction-box')
@@ -185,16 +203,8 @@
   }
 
 
-  //----------------MRT---------------------
-  //取得mrt資訊
-  const mrtsURL='/api/mrts'
-  fetch(mrtsURL).then(res=>{
-    return res.json();
-  }).then(result =>{
-    mrtsAPI(result)
-  }).catch(error=>{
-    console.error('Error fetching mrts:',error);
-  });
+  //----------------MRT----------------------------|
+
 
   //mrt資訊
   function mrtsAPI(data){
@@ -217,3 +227,5 @@
     })
     parentDiv.appendChild(mrtListItem)
   };
+
+
