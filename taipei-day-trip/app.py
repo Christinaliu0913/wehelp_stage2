@@ -72,18 +72,6 @@ async def thankyou(request: Request):
 @app.exception_handler(RequestValidationError)
 async def validation_exception(req: Request, exc: RequestValidationError):
 	return RedirectResponse(url='/')
-
-### 處理http異常
-# @app.exception_handler(HTTPException)
-# async def http_exception(req: Request, exc: HTTPException):
-# 	if exc.status_code in {400, 422, 404}:
-# 		return RedirectResponse(url='/')
-# 	return JSONResponse(
-# 		status_code=exc.status_code,
-# 		content={
-# 			"message":exc.detail
-# 		},
-# 	)
 ### 處理其他異常
 @app.exception_handler(Exception)
 async def global_exception(req: Request, exc: Exception):

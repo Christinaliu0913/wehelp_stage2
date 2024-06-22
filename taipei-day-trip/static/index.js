@@ -147,10 +147,11 @@ let observer = null;
       const attractionsName = attractionItem.name;
       const attractionsCat = attractionItem.category;
       const attractionsMrt = attractionItem.mrt;
-      attractionsCard(attractionsDiv,attractionsIMG,attractionsName,attractionsCat,attractionsMrt)
+      const attractionsId =attractionItem.id;
+      attractionsCard(attractionsDiv,attractionsIMG,attractionsName,attractionsCat,attractionsMrt,attractionsId)
     }
   }
-  function attractionsCard(parentDiv,imgs,name,cat,mrt){
+  function attractionsCard(parentDiv,imgs,name,cat,mrt,id){
     //景點卡片
     const attractionsCard = document.createElement("div");
     attractionsCard.classList.add('attraction-card');
@@ -173,6 +174,10 @@ let observer = null;
     const attractionsCardBox = document.createElement('div');
     attractionsCardBox.classList.add('attraction-card-box');
 
+    //景點卡片連結
+    const attractionsCardLink = document.createElement('a');
+    attractionsCardLink.href = `/attraction/${id}`
+
     //景點卡片標題-名稱
     const attractionsCardItem1 = document.createElement('div');
     attractionsCardItem1.classList.add('attraction-card-item1');
@@ -193,13 +198,14 @@ let observer = null;
     attractionsCardItem2P2.textContent = cat;
     
     //appendChild
-    parentDiv.appendChild(attractionsCard)
+    parentDiv.appendChild(attractionsCardLink);
+    attractionsCardLink.appendChild(attractionsCard)
     attractionsCard.appendChild(attractionsCardBox);
-    attractionsCardBox.appendChild(attractionsCardItem1)
-    attractionsCardBox.appendChild(attractionsCardItem2)
-    attractionsCardItem1.appendChild(attractionsCardItem1P)
-    attractionsCardItem2.appendChild(attractionsCardItem2P1)
-    attractionsCardItem2.appendChild(attractionsCardItem2P2)
+    attractionsCardBox.appendChild(attractionsCardItem1);
+    attractionsCardBox.appendChild(attractionsCardItem2);
+    attractionsCardItem1.appendChild(attractionsCardItem1P);
+    attractionsCardItem2.appendChild(attractionsCardItem2P1);
+    attractionsCardItem2.appendChild(attractionsCardItem2P2);
   }
 
 
