@@ -156,12 +156,15 @@ def sign_in(user: UserResponse):
 	con=connect_sql()
 	cursor=con.cursor()
 	try:
-		cursor.execute('SELECT id, name, password FROM member where email=%s and password=%s',(user.email, user.password))
+		cursor.execute('SELECT id, name, password FROM member where email=%s ',(user.email, ))
 		result = cursor.fetchone()
+
+		user_id, name, hashed_password = result
 		#登入失敗，密碼帳號錯誤
-		if result is None:
+		if result is None and not verify_password(user.password,hashed_password):
 			return JSONResponse(content={"error":True,'message':'帳號或密碼錯誤'},status_code=400)
-		user_id, name, password = result
+		
+		
 		#生成JWT token
 		token = create_access_token(data={'user_id': user_id, 'name': name, 'email':user.email})
 		return JSONResponse(content={'token':token})
