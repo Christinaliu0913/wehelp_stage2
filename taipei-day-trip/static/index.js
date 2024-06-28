@@ -1,24 +1,60 @@
+//-----------------------loading----------------------|
+const attractionsURL = '/api/attractions'
+const mrtsURL = '/api/mrts'
+const getTokenURL = '/api/user/auth' 
+const token = this.localStorage.getItem('token');//從local端獲取token
+window.addEventListener('load',function(){
+  //檢查是否為登入的狀況
+  checkSigned();
+  
+  //取得attractions 資訊
+  fetch(attractionsURL).then(res=>{
+    return res.json();
+  }).then(result =>{
+    attractionsAPI(result);
+    //保存下一頁的值
+    nextPage = result.nextPage;
+    //設置無限滾動
+    setupInfiniteScroll();
+    
+  }).catch(error => {
+    console.error('Error fetching attractions:', error);
+  });
+  
+  
+  //取得mrt資訊
+  fetch(mrtsURL).then(res=>{
+    return res.json();
+  }).then(result =>{
+    mrtsAPI(result)
+  }).catch(error=>{
+    console.error('Error fetching mrts:',error);
+  });
+  
+  });
+  
+
 //|------------------登入/註冊-----------------------|
 
- //左右滑動
+ //捷運bar左右滑動
  function moveLeft(){
     document.getElementById("mrts-list").scrollLeft -= 450;
   }
   function moveRight(){
     document.getElementById("mrts-list").scrollLeft += 450;
   }
-  //登入頁面
+  //登入彈跳視窗
   function signIn(){
     document.querySelector('#signin').style.display = 'flex';
     document.querySelector('.overlay').style.display = 'flex';
     document.querySelector('#signup').style.display = 'none';
   }
-  //返回
+  //登入返回
   function signinClose(){
     document.querySelector('#signin').style.display = 'none';
     document.querySelector('.overlay').style.display = 'none';
   }
-  //註冊頁面
+  //轉至註冊頁面
   function signUp(){
     document.querySelector('#signin').style.display = "none";
     document.querySelector('#signup').style.display = "flex";
@@ -28,8 +64,121 @@
     document.querySelector('#signup').style.display = 'none';
     document.querySelector('.overlay').style.display = 'none';
   }
+  //登入後navigationbar變動
+  function Showsigned(){
+    document.getElementById('nav-signin').style.display = 'none';
+    document.getElementById('nav-signout').style.display = 'flex';
+  }
+  function signOut(){
+    localStorage.removeItem('token');
+    alert('成功登出！');
+    document.getElementById('nav-signin').style.display = 'flex';
+    document.getElementById('nav-signout').style.display = 'none';
+  }
+//註冊送出表單
+  function signUpAPI(){
+    const signUpName = document.getElementById('signUpName').value.trim();
+    const signUpEmail = document.getElementById('signUpEmail').value.trim();
+    const signUpPassword = document.getElementById('signUpPassword').value.trim();
+    const errorMessage = document.getElementById('signUpError');
+    //檢查是否所有格子已填寫
+    if(!signUpName || !signUpEmail || !signUpPassword){
+      alert('請填妥所有資訊');
+      errorMessage.textContent = '';
+      return;
+    }
 
-  //----------------設置無限滾動---------------------------|
+    fetch('/api/user',{
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({name:signUpName,email:signUpEmail,password:signUpPassword})
+    }).then(res => {return res.json()}).then(result =>{
+      //若是fetch到回覆error，則出現提示字樣
+      if(result.error){
+        errorMessage.textContent = '';
+        errorMessage.textContent = result.message;
+      }else{
+        alert('註冊成功!');
+        //清空輸入框和錯誤消息
+        document.querySelector('#signup-form').reset();
+        errorMessage.textContent = '';
+      }
+    }).catch(error => {
+      errorMessage.textContent = error.message;
+      console.error("Error:",error)
+    })
+  }
+//登入
+  function signInAPI(){
+    const signInEmail = document.getElementById('signInEmail').value.trim();
+    const signInPassword = document.getElementById('signInPassword').value.trim();
+    const signInError = document.getElementById('signInError')
+
+    if(!signInEmail || !signInPassword){
+      alert('請填入帳號與密碼');
+      signInError.textContent = '';
+      return ;
+    }
+
+    fetch('/api/user/auth',{
+      method: "PUT",
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({email:signInEmail,password:signInPassword})
+    }).then(res => {return res.json()}).then(result =>{
+      if(result.error){
+        signInError.textContent = '';
+        signInError.textContent =  result.message;
+      }else{
+        //將token儲存至localStorage
+        localStorage.setItem('token', result.token)
+        alert('成功登入！');
+        signinClose();
+        Showsigned();
+        document.querySelector('#signin-form').reset();
+        signInError.textContent = '';
+      }
+    }).catch(error =>{
+      console.log('Error:', error);
+      signInError.textContent = error.error;
+    })
+      
+  }
+
+//檢查是否登入狀態
+async function checkSigned(){
+  if (!token){
+    console.log('not signed in');
+    return;//直接返回
+  }
+
+  try{
+    const tokenRes = await fetch(getTokenURL,{
+      method: 'GET',
+      headers:{
+        'Authorization' : `Bearer ${token}` //發送token進行驗證
+      }
+    })
+    if(tokenRes.ok){
+      const tokenResult = await tokenRes.json();
+      Showsigned();
+      console.log("Login verified:", tokenResult);
+    }else{
+      console.error('Failed to verify login', await tokenRes.json());
+      localStorage.removeItem('token');//驗證失敗，清除不正確的token
+    }
+  }catch(error){
+      console.error('Error:',error);
+      alert('加油好嗎？');
+    }
+  
+};
+
+
+//----------------設置無限滾動---------------------------|
 let observer = null;
 
   function setupInfiniteScroll(){
@@ -104,43 +253,12 @@ let observer = null;
 
 
   //----------------attractions-----------------------|
-  
-  
-  const attractionsURL = '/api/attractions'
-  const mrtsURL='/api/mrts'
-  window.addEventListener('load',function(){
-
-  //取得attractions 資訊
-    fetch(attractionsURL).then(res=>{
-      return res.json();
-    }).then(result =>{
-      attractionsAPI(result);
-      //保存下一頁的值
-      nextPage = result.nextPage;
-      //設置無限滾動
-      setupInfiniteScroll();
-      
-    }).catch(error => {
-      console.error('Error fetching attractions:', error);
-    });
-
-
-  //取得mrt資訊
-    fetch(mrtsURL).then(res=>{
-      return res.json();
-    }).then(result =>{
-      mrtsAPI(result)
-    }).catch(error=>{
-      console.error('Error fetching mrts:',error);
-    });
-  
-  });
 
   
   //----------------attractionsCard-----------------------------|
   function attractionsAPI(data){
     const attractionsData = data.data;
-    const attractionsDiv = document.querySelector('.attraction-box')
+    const attractionsDiv = document.querySelector('.attraction-box');
     for(let i=0;i < attractionsData.length;i++){
       const attractionItem = attractionsData[i];
       const attractionsIMG = attractionItem.images;

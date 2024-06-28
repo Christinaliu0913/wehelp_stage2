@@ -8,15 +8,18 @@
 </head>
 <body class="body">
   <div class="wrapper">
+    <!-----------navigationbar----------->
     <header>
       <nav class="nav">
         <h2 class="nav-title"><a href="/" style="text-decoration: none; color: inherit;">台北一日遊</a></h2>
         <ul class="nav-list">
           <li class="nav-list-item">預定行程</li>
-          <li class="nav-list-item" onclick="signIn()">登入/註冊</li>
+          <li class="nav-list-item" id='nav-signin'onclick="signIn()">登入/註冊</li>
+          <li class="nav-list-item" id='nav-signout' onclick="signOut()">登出系統</li>
         </ul>
       </nav>
     </header>
+    <!-----------中間搜尋區塊----------->
     <div class="search">
       <form class="search-form" id="search-form">
         <h2 class="search-form-title">輕鬆享受台北一日悠閒</h2>
@@ -28,7 +31,9 @@
         </div>
       </form>
     </div>
+
     <main>
+      <!-----------捷運列表----------->
       <div class="listBar">
         <div class="listBar-box">
           <button class="listBar-left-buttom" onclick="moveLeft()"><p class="arrow left"></p></button>
@@ -37,40 +42,46 @@
           <button class="listBar-right-buttom" onclick="moveRight()"><p class="arrow right"></p></button>
         </div>
       </div>
+      <!-----------景點卡片----------->
       <section class="attraction">
         <div class="attraction-box">
         </div>
       </section>
     </main>
+    <!-----------登入----------->
     <div class="overlay" id="overlay-signin"></div>
     <div class="signin">
         <div class="signin-box" id="signin">
-          <div class="signin-form">
+          <form class="signin-form" id="signin-form">
             <div class="signin-topbar"></div>
-            <button class="signinup-back" onclick="signinClose()"><img src="/static/img/close.png" alt=""></button>
+            <button class="signinup-back" type='button'  onclick="signinClose()"><img src="/static/img/close.png" alt=""></button>
             <h3>登入會員帳號</h3>
-            <div ><input type="text" placeholder="    輸入電子信箱" ></div>
-            <div ><input type="text" placeholder="    輸入密碼" ></div>
-            <button class="signinup-handout">登入帳戶</button>
+            <div ><input  id= 'signInEmail' type="text" placeholder="輸入電子信箱" ></div>
+            <div ><input  id= 'signInPassword' type="text" placeholder="輸入密碼" ></div>
+            <button class="signinup-handout" type="button" onclick="signInAPI()">登入帳戶</button>
+            <div id="signInError" class="signup-error"></div>
             <p onclick="signUp()">還沒有帳戶？點此註冊</p>
-          </div>
+          </form>
         </div>
     </div>
+    <!-----------註冊----------->
     <div class="signup">
       <div class="signup-box" id="signup">
-        <div class="signup-form">
+        <form class="signup-form" id="signup-form">
           <div class="signup-topbar"></div>
-          <button class="signinup-back" onclick="signupClose()"><img src="/static/img/close.png" alt=""></button>
+          <button class="signinup-back" type='button' onclick="signupClose()"><img src="/static/img/close.png" alt=""></button>
           <h3>註冊會員帳號</h3>
-          <div ><input type="text" placeholder="    輸入姓名" ></div>
-          <div ><input type="text" placeholder="    輸入電子信箱" ></div>
-          <div ><input type="text" placeholder="    輸入密碼" ></div>
-          <button class="signinup-handout">註冊新帳戶</button>
+          <div ><input id= 'signUpName' type="text" placeholder="輸入姓名" ></div>
+          <div ><input id= 'signUpEmail'  type="text" placeholder="輸入電子信箱" required pattern="^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+$" ></div>
+          <div ><input id='signUpPassword'  type="text" placeholder="輸入密碼" ></div>
+          <button class="signinup-handout" type='button' onclick="signUpAPI()">註冊新帳戶</button>
+          <div id="signUpError" class="signup-error"></div>
           <p onclick="signIn()">已經有帳戶了？點此進入</p>
-        </div>
+        </form>
       </div>
+    </div>
   </div>
-  </div>
+  <!-----------footer----------->
   <footer class="footer"><p class="footer-text">COPYRIGHT©2024台北一日遊</p></footer>
   <script src="/static/index.js">
   </script>
