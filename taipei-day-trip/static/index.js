@@ -133,7 +133,7 @@ window.addEventListener('load',function(){
     }).then(res => {
       if(!res.ok){
         signInError.textContent = '';
-        signInError.textContent =  result.message;
+        signInError.textContent =  res.message;
         }
       return res.json();
     }).then(result =>{
