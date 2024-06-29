@@ -98,42 +98,50 @@ window.addEventListener('load',function(){
     })
   }
 //登入
-  function signInAPI(){
-    const signInEmail = document.getElementById('signInEmail').value.trim();
-    const signInPassword = document.getElementById('signInPassword').value.trim();
-    const signInError = document.getElementById('signInError')
+function signInAPI(){
+  const signInEmail = document.getElementById('signInEmail').value.trim();
+  const signInPassword = document.getElementById('signInPassword').value.trim();
+  const signInError = document.getElementById('signInError')
+  //清理錯誤訊息
+  signInError.textContent = '';
 
-    if(!signInEmail || !signInPassword){
-      alert('請填入帳號與密碼');
-      signInError.textContent = '';
-      return ;
-    }
-
-    fetch('/api/user/auth',{
-      method: "PUT",
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({email:signInEmail,password:signInPassword})
-    }).then(res => {return res.json()}).then(result =>{
-      if(result.error){
-        signInError.textContent = '';
-        signInError.textContent =  result.message;
-      }else{
-        //將token儲存至localStorage
-        localStorage.setItem('token', result.token)
-        alert('成功登入！');
-        signinClose();
-        Showsigned();
-        document.querySelector('#signin-form').reset();
-        signInError.textContent = '';
-      }
-    }).catch(error =>{
-      console.log('Error:', error);
-      signInError.textContent = error.error;
-    })
-      
+  if(!signInEmail || !signInPassword){
+    alert('請填入帳號與密碼');
+    signInError.textContent = '';
+    return ;
   }
+
+  fetch('/api/user/auth',{
+    method: "PUT",
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({email:signInEmail,password:signInPassword})
+  }).then(res => {
+    if(!res.ok){
+      signInError.textContent = '';
+      signInError.textContent =  result.message;
+      }
+    return res.json();
+  }).then(result =>{
+    if(result.error){
+      signInError.textContent = '';
+      signInError.textContent =  result.message;
+    }else{
+      //將token儲存至localStorage
+      localStorage.setItem('token', result.token)
+      alert('成功登入！');
+      signinClose();
+      Showsigned();
+      document.querySelector('#signin-form').reset();
+      signInError.textContent = '';
+    }
+  }).catch(error =>{
+    console.log('Error:', error);
+    signInError.textContent = error.error;
+  })
+    
+}
 
 //檢查是否登入狀態
 async function checkSigned(){

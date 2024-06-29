@@ -161,11 +161,12 @@ def sign_in(user: UserResponse):
 		
 		#登入失敗，密碼帳號錯誤
 		if result is None :
-			return JSONResponse(content={"error":True,'message':'帳號或密碼錯誤'},status_code=400)
+			return JSONResponse(content={"error":True,'message':'無此帳號'},status_code=400)
+		#獲得使用者id、使用者名稱、加密密碼
 		user_id, name, hashed_password = result
 
 		if not verify_password(user.password,hashed_password):
-			return JSONResponse(content={"error":True,'message':'帳號或密碼錯誤'},status_code=400)
+			return JSONResponse(content={"error":True,'message':'密碼錯誤'},status_code=400)
 		
 		#生成JWT token
 		token = create_access_token(data={'user_id': user_id, 'name': name, 'email':user.email})
