@@ -74,7 +74,7 @@
         <button class="signinup-back" type='button'  onclick="signinClose()"><img src="/static/img/close.png" alt=""></button>
         <h3>登入會員帳號</h3>
         <div ><input  id= 'signInEmail' type="text" placeholder="輸入電子信箱" ></div>
-        <div ><input  id= 'signInPassword' type="text" placeholder="輸入密碼" ></div>
+        <div ><input  id= 'signInPassword' type="password" placeholder="輸入密碼" ></div>
         <button class="signinup-handout" type="button" onclick="signInAPI()">登入帳戶</button>
         <div id="signInError" class="signup-error"></div>
         <p onclick="signUp()">還沒有帳戶？點此註冊</p>
@@ -90,7 +90,7 @@
         <h3>註冊會員帳號</h3>
         <div ><input id= 'signUpName' type="text" placeholder="輸入姓名" ></div>
         <div ><input id= 'signUpEmail'  type="text" placeholder="輸入電子信箱" required pattern="^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+$" ></div>
-        <div ><input id='signUpPassword'  type="text" placeholder="輸入密碼" ></div>
+        <div ><input id='signUpPassword'  type="password" placeholder="輸入密碼" ></div>
         <button class="signinup-handout" type='button' onclick="signUpAPI()">註冊新帳戶</button>
         <div id="signUpError" class="signup-error"></div>
         <p onclick="signIn()">已經有帳戶了？點此進入</p>

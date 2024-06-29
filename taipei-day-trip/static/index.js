@@ -115,6 +115,8 @@ window.addEventListener('load',function(){
     const signInEmail = document.getElementById('signInEmail').value.trim();
     const signInPassword = document.getElementById('signInPassword').value.trim();
     const signInError = document.getElementById('signInError')
+    //清理錯誤訊息
+    signInError.textContent = '';
 
     if(!signInEmail || !signInPassword){
       alert('請填入帳號與密碼');
@@ -128,7 +130,13 @@ window.addEventListener('load',function(){
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({email:signInEmail,password:signInPassword})
-    }).then(res => {return res.json()}).then(result =>{
+    }).then(res => {
+      if(!res.ok){
+        signInError.textContent = '';
+        signInError.textContent =  result.message;
+        }
+      return res.json();
+    }).then(result =>{
       if(result.error){
         signInError.textContent = '';
         signInError.textContent =  result.message;
