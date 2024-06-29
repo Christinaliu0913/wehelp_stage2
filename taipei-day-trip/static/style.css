@@ -51,7 +51,9 @@ header{
     cursor: pointer;
     white-space:nowrap;
 }
-
+#nav-signout{
+    display: none;
+}
 
 /*search*/
 
@@ -261,7 +263,7 @@ header{
     position: fixed;
     top: 80px;
     width: 340px;
-    height: 265px;
+    height: auto;
     background-color: #ffffff;
     display: none;
     justify-content: center;
@@ -270,10 +272,14 @@ header{
     z-index: 10000;
     
 }
+.signin-form{
+    max-width: 340px;
+}
 .signin-form > h3{
     font-size: 24px;
     color: #666666;
-    margin: 5px;
+    margin: 0px;
+    padding: 5px;
     text-align: center;
 }
 .signin-topbar{
@@ -281,7 +287,7 @@ header{
     top: -10px;
     height: 10px;
     width: 340px;
-    background-color: #448899;
+    background: linear-gradient(to right, #bbcfd5, #448899);
     border-radius: 5px 5px 0px 0px ;
 }
 
@@ -299,7 +305,9 @@ header{
     border-radius: 5px;
     padding: 0;
     border: solid 0.5px #CCCCCC;
-    margin: 5px 15px;;
+    margin: 5px 15px;
+    color: #666666;
+    text-indent: 20px;
 }
 .signinup-handout{
     width: 310px;
@@ -332,7 +340,7 @@ header{
     position: fixed;
     top: 80px;
     width: 340px;
-    height: 332px;
+    height: auto;
     background-color: #ffffff;
     display: none;
     justify-content: center;
@@ -340,18 +348,23 @@ header{
     box-shadow: 0px 0px 15px #666666;
     z-index: 10000;
 }
+.signup-form{
+    max-width: 340px;
+}
 .signup-form > h3{
     font-size: 24px;
     color: #666666;
-    margin: 5px;
+    padding: 5px;
     text-align: center;
+    margin: 0px;
 }
+
 .signup-topbar{
     position: relative;
     top: -10px;
     height: 10px;
     width: 340px;
-    background-color: #448899;
+    background: linear-gradient(to right, #bbcfd5, #448899);
     border-radius: 5px 5px 0px 0px ;
 }
 
@@ -369,6 +382,8 @@ header{
     padding: 0;
     border: solid 0.5px #CCCCCC;
     margin: 5px 15px;
+    color: #666666;
+    text-indent: 20px;
     
 }
 .signup-form > p{
@@ -387,6 +402,12 @@ header{
     background-color: #00000025 ;
     z-index: 9999;
     display: none;
+}
+.signup-error{
+    text-align: center;
+    margin: 5px;
+    font-size: 14px;
+    color: #9e5a5a;
 }
 /*--------------Attraction.html-----------------*/
 
