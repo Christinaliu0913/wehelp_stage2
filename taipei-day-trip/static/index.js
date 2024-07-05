@@ -32,7 +32,17 @@ window.addEventListener('load',function(){
   });
   
   });
-  
+//|------------------預定行程-----------------------|
+//提醒登入狀態
+function booking(){
+  //提醒登入狀態
+  if (token){
+    window.location.href = '/booking';
+  }else{
+    alert('先請登入系統');
+    signIn();
+  }
+}
 
 //|------------------登入/註冊-----------------------|
 
@@ -72,8 +82,7 @@ window.addEventListener('load',function(){
   function signOut(){
     localStorage.removeItem('token');
     alert('成功登出！');
-    document.getElementById('nav-signin').style.display = 'flex';
-    document.getElementById('nav-signout').style.display = 'none';
+    location.reload();
   }
 //註冊送出表單
   function signUpAPI(){
@@ -147,7 +156,7 @@ window.addEventListener('load',function(){
         signinClose();
         Showsigned();
         document.querySelector('#signin-form').reset();
-        signInError.textContent = '';
+        location.reload();
       }
     }).catch(error =>{
       console.log('Error:', error);
@@ -155,6 +164,7 @@ window.addEventListener('load',function(){
     })
       
   }
+
 
 //檢查是否登入狀態
 async function checkSigned(){

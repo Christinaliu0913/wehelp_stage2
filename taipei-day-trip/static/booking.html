@@ -3,9 +3,90 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" type='text/css' href="/static/style.css">
   <title>Booking</title>
 </head>
 <body>
-  
+  <div class="wrapper">
+    <!-----------navigationbar----------->
+    <header>
+      <nav class="nav">
+        <h2 class="nav-title"><a href="/" style="text-decoration: none; color: inherit;">台北一日遊</a></h2>
+        <ul class="nav-list">
+          <li class="nav-list-item">預定行程</li>
+          <li class="nav-list-item" id='nav-signin'onclick="signIn()">登入/註冊</li>
+          <li class="nav-list-item" id='nav-signout' onclick="signOut()">登出系統</li>
+        </ul>
+      </nav>
+    </header>
+    <!--------------預定行程--------------->
+    
+      <div class="userIntro">
+        <div class="userIntro-box">
+          <h3 id="username">您好，待預定的行程如下：</h3>
+          <div id="noBooking"></div>
+        </div>
+      </div>
+      
+    <div id="main">
+      <div class="bookIntro">
+        <form class="bookIntro-box">
+          <div class="bookIntro-info">
+            <div class="info-img"></div>
+            <div class="info-detail">
+              <div class="info-detail-title">台北一日遊：</div>
+              <div>
+                <p>日期：<span id="bookDate">1123412341</span></p>
+                <p>時間：<span id="bookTime">2123412341234</span></p>
+                <p>費用：<span id="bookFee">31234123412</span></p>
+                <p>地點：<span id="attractionAddress">4123412341</span></p>
+              </div>
+            </div>  
+            <div class="info-delete"><button id="info-delete-button" onclick="deleteBooking()">
+              <img src="/static/img/icon_delete.png" alt=""></button></div>      
+          </div>
+          
+        </form>
+        
+      </div>
+      <hr class="middleLine">
+      <!--------------聯絡資訊--------------->
+      <div class="bookProfile">
+        <div class="bookProfile-box">
+          <h3>您的聯絡資訊</h3>
+          <div>聯絡姓名：<input name='name' type="text"></div>
+          <div>聯絡信箱：<input name="email" type="email"></div>
+          <div>手機號碼：<input name="phone" type="number" placeholder="0912345678"></div>
+          <p>請保持手機暢通，準時到達，導覽人員將用手機與您聯絡，務必留下正確的聯絡方式</p>
+        </div>
+      </div>
+      <hr class="middleLine">
+      <!--------------付款資訊--------------->
+      <div class="bookPay">
+        <div class="bookPay-box">
+          <h3>信用卡付款資訊</h3>
+          <div>卡片號碼：<input type="text" placeholder="**** **** **** ****" pattern="\d{4} \d{4} \d{4} \d{4}" required></div>
+          <div>過期時間：<input type="text" placeholder="MM/YY" pattern="\d{2}/\d{2}" required></div>
+          <div>驗證密碼：<input type="text" placeholder="CVN" pattern="\d{3}" required ></div>
+        </div>
+      </div>
+      <hr class="middleLine">
+      <!--------------訂購付款--------------->
+      <div class="bookSum">
+        <div class="bookSum-box">
+          <form>
+            <div id="sumupPrice"></div>
+            <button>確認訂購並付款</button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!---------------footer--------------->
+  <footer class="footer"><p class="footer-text">COPYRIGHT©2024台北一日遊</p></footer>
+  <script src="/static/book.js">
+  </script>
 </body>
 </html>
