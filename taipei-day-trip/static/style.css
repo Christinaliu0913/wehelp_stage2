@@ -857,6 +857,7 @@ header{
         top: -10px;
     }
 }
+
 @media(max-width:540px){
     .attraction-box{
         grid-template-columns: repeat(2,1fr); 
