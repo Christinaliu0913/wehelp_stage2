@@ -1,6 +1,6 @@
 const getTokenURL = '/api/user/auth' 
 const token = localStorage.getItem('token');//從local端獲取token
-const bookingURL = '/api/booking'
+
 //-------------------load---------------------------|
 window.addEventListener('load',function(){
     //確認登入情形
@@ -55,13 +55,14 @@ async function checkSigned(){
 //---------------fetch預定的資料-------------
 function bookForm(){
     fetch(bookingURL,{
-        'method':'GET',
-        'headers': {
+        method:'GET',
+        headers: {
             'Authorization': `Bearer ${token}`
         }
     })
     .then(res=>res.json())
     .then(result => {
+        console.log(result)
         renderBook(result);
     })
     .catch(error => {
@@ -124,3 +125,259 @@ function deleteBooking(){
     })
 }
     
+//--------------信用卡表單設定----------------
+
+// //卡片號碼設置
+// document.getElementById('card-number').addEventListener('input',function(event){
+//   let value = event.target.value.replace(/\D/g, '');
+//   value = value.substring(0,16)
+//   event.target.value = value.replace(/(\d{4})(?=\d)/g, '$1 ')
+// });
+
+// //過期時間設置
+// document.getElementById('card-expiration-date').addEventListener('input',function(event){
+//   let value = event.target.value.replace(/\D/g, '');
+//   if (value.length >= 3){
+//     value = value.slice(0,2) + '/' +value.slice(2);
+//   }
+//   event.target.value = value.substring(0,5);
+// });
+
+
+//-------------TapPay設定與串接----------------------
+
+//初始化，從後台獲取專案ID,api token
+
+TPDirect.setupSDK(
+  151966,
+  'app_1QnD3OTAcbpXSZiXnvUsPUvaC8fm51s2LWVHzzuOXiZpRrfwbtzzPzh5Qnlo',
+  'sandbox'
+);
+
+//設置信用卡表單
+
+TPDirect.card.setup({
+  fields: {
+    number:{
+      element:'#card-number',
+      placeholder: '**** **** **** ****'
+    },
+    expirationDate:{
+      element:'#card-expiration-date',
+      placeholder: 'MM/YY'
+    },
+    ccv:{
+      element: '#ccv',
+      placeholder: 'CCV'
+    }
+  },
+  styles: {
+    'input': {
+        'color': '#a6a6a6',
+        'font-size': '14px'
+    },
+    ':focus': {
+        'color': 'blue'
+    },
+    '.valid': {
+        'color': 'green'
+    },
+    '.invalid': {
+        'color': 'red'
+    },
+    '@media screen and (max-width: 400px)': {
+        'input': {
+            'color': 'orange'
+        }
+    }
+  }
+});
+
+// TPDirect.card.onUpdate(update => {
+//   if (update.canGetPrime) {
+//     //全部欄位皆為正確 可以呼叫 getPrime
+//     //確保按鈕在所有字段正確時可以用
+//     document.getElementById('reserve-button').disabled = false;
+//   } else {
+//     document.getElementById('reserve-button').disabled = true;
+//   }
+
+//   updateStatus(update.status.number);
+//   updateStatus(update.status.expiry);
+//   updateStatus(update.status.ccv);
+
+//   console.log('Card Number Status:', update.status.number);
+//   console.log('Expiration Date Status:', update.status.expiry);
+//   console.log('CCV Status:', update.status.ccv);
+// });
+  
+
+
+
+//用於更新狀態的函數，可以根據需要擴展
+function updateStatus(status){
+  console.log('status', status);
+}
+  
+
+
+//表單提交
+
+document.getElementById('reserve-button').addEventListener('click',function(event){
+  event.preventDefault();
+
+  
+  //確認所有格子填妥
+  const name = document.getElementById('user-name').value.trim();
+  const email = document.getElementById('user-email').value.trim();
+  const phone = document.getElementById('user-phone').value.trim();
+ 
+  //取得TapPay fields 的status
+  const tappayStatus = TPDirect.card.getTappayFieldsStatus()
+  //確認是否可以 GetPrime
+  if (tappayStatus.canGetPrime === false || !name || !email || !phone){
+    alert('請填妥完整資訊');
+    console.log('TapPay fields Status:', tappayStatus)
+    return
+  }
+
+  //Get Prime
+
+  TPDirect.card.getPrime(async function(result){
+    if (result.status !== 0){
+      alert('取得Token失敗: ' +result.msg)
+      console.log('Error:', result);
+      return;
+    }
+    alert('get prime成功，prime'+result.card.prime)
+    //將prime傳送到sever端
+    const prime = result.card.prime;
+    sendPrimeToSever(prime);
+
+  });
+});
+
+const bookingURL = '/api/booking'
+const orderURL = '/api/orders'
+
+//將prime傳送到sever端
+async function sendPrimeToSever(prime){
+    const setPrime = prime
+    //獲取會員資料
+    const userData = JSON.parse(localStorage.getItem('user_data'))
+    const userName = userData.name;//獲取用戶名
+    const userEmail = userData.email;//獲取用戶email
+    const userPhone = document.querySelector('#user-phone').value.trim()//獲取用戶手機
+
+    
+    //獲取景點資料
+    const bookingResponse = await fetch(bookingURL,{
+      method:'GET',
+      headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+      }
+    });
+
+    if(!bookingResponse.ok){
+      throw new Error('failed to fetch booking data')
+    }else{
+      console.log('success to fetch booking')
+    }
+
+    const result = await bookingResponse.json();
+
+    console.log(result);
+    const attractionData = result.data.attraction;
+    const attractionId = attractionData.id;
+    const attractionName = attractionData.name;
+    const attractionAddress = attractionData.address;
+    const attractionImg = attractionData.image;
+    const bookDate = result.data.date;
+    const bookTime = result.data.time;
+    const bookPrice = result.data.price;
+
+    const bookingForm = {
+      prime: setPrime,
+      order: {
+        price: bookPrice,
+        trip:{
+          attraction:{
+            id: attractionId,
+            name: attractionName,
+            address: attractionAddress,
+            image: attractionImg
+          },
+          date: bookDate,
+          time: bookTime
+        },
+        contact: {
+          name: userName,
+          email: userEmail,
+          phone: userPhone
+        }
+      }
+    }
+    console.log(bookingForm);
+    postOrder(bookingForm);
+};
+
+
+//---------------------------
+function postOrder(bookingForm){
+  fetch(orderURL,{
+    method: "POST",
+    headers: {
+      'Authorization':`Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(bookingForm)
+  }).then(req => {
+    req.json();
+  }).then(result =>{
+    if(result.error){
+      console.log(result.message)
+    }else{
+      alert('訂購成功')
+    }
+  }).catch(error => {
+  alert(error.message)
+  console.log('Error:',error)
+  })
+}
+
+
+
+//--------------------------------
+
+    //使用sever端API請求來處理付款
+  //   const orderResponse = await fetch(orderURL,{
+  //     method: "POST",
+  //     headers: {
+  //         'Authorization': `Bearer ${token}`,
+  //         'Content-Type': 'application/json',
+          
+  //     },
+  //     body: JSON.stringify(bookingForm),
+  //     redirect: 'manual'//
+  //   });
+
+  //   if(!orderResponse.ok){
+  //     const errorText = await orderResponse.text();
+  //     console.error('Network response was not ok', orderResponse.status,errorText)
+  //     throw new Error(`Network response was not ok: ${orderResponse.statusText} (status: ${orderResponse.status})`)
+  //   }
+
+  //   const orderData =await orderResponse.json();
+    
+  //   if(orderData.ok){
+  //     alert('訂單建立成功')
+  //     window.location.href='/thankyou';
+  //   }else{
+  //     alert(orderData.message);
+  //   }
+  // }catch(error){
+  //   console.error('Error:',error);
+  //   alert(error.message)
+  // }  
+  

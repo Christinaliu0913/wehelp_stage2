@@ -3,7 +3,6 @@ from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.security import OAuth2PasswordBearer,OAuth2PasswordRequestForm
 from typing import List, Optional
 from pydantic import BaseModel
 import mysql.connector
@@ -16,7 +15,8 @@ from jwt.exceptions import InvalidTokenError,ExpiredSignatureError
 import datetime
 import secrets
 from passlib.context import CryptContext
-
+import json
+import httpx
 
 app=FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -28,7 +28,6 @@ app.add_middleware(
     allow_headers=["*"], #允許所有標頭(headers)
 )
 #---------------------BaseModel資料型態----------------------|
-
 ### User 資料型態
 class User(BaseModel):
 	name: str
@@ -72,12 +71,34 @@ class BookingResponse(BaseModel):
 	date: Optional[str]
 	time: Optional[str]
 	price: Optional[int]
+### Order 資料型態
+class Trip(BaseModel):
+	attraction: BookingAttraction
+	date: str
+	time: str
+class Contact(BaseModel):
+	name: str
+	email: str
+	phone: str
+class Order(BaseModel):
+	price: int
+	trip: Trip
+	contact: Contact
+class OrderForm(BaseModel):
+	prime: str
+	order: Order
+class OrderCheckdata(BaseModel):
+	number: str
+	price: int
+	trip: Trip 
+	contact: Contact
+	status: int
 #-----------------------連線至mysql-------------------------------|
 db={
 	"user":"root",
 	"host":"localhost",
 	"database":"taipei",
-	"password":"ASdf1234."
+	"password":"12345678"
 }
 def connect_sql():
 	con = mysql.connector.connect(**db)
@@ -163,7 +184,15 @@ def verify_token(token:str):
 	except ExpiredSignatureError:
 		raise HTTPException(status_code=401, detail='token has expired')
 
-## API Booking---------------------------------------
+
+	
+
+
+
+
+
+
+## --------------------------------------API Booking---------------------------------------
 ### 取得會員預定資訊
 @app.get('/api/booking', response_class= JSONResponse)
 def getBooking(res: Request):
@@ -291,7 +320,7 @@ def deleteBooking(res: Request):
 		cursor.close() 
 
 
-## API User---------------------------------------
+## -------------------------------------API User---------------------------------------
 ### 登入會員帳戶 (PUT)
 @app.put("/api/user/auth", response_class = JSONResponse)
 def sign_in(user: UserResponse):
@@ -319,9 +348,9 @@ def sign_in(user: UserResponse):
 	finally:
 		cursor.close()
 		con.close()
-		
-		
-#取得當前登入的會員資訊 (GET)
+
+
+### 取得當前登入的會員資訊 (GET)
 @app.get('/api/user/auth', response_class=JSONResponse)
 def get_user_access(req: Request):
 	token = req.headers.get('Authorization')
@@ -339,7 +368,6 @@ def get_user_access(req: Request):
 		raise e
 	except Exception as e:
 		raise HTTPException(status_code=500, detail=str(e))
-	
 	
 
 ### 註冊會員
@@ -370,12 +398,9 @@ def sign_up(user: User):
 	finally:
 		cursor.close()
 		con.close()
-		
 
 
-
-
-## API Attractions 取得景點資料表-----------------------------------------------
+## -------------------------------------API Attractions 取得景點資料表-----------------------------------------------
 @app.get("/api/attractions",response_model=AttractionResponse)
 async def get_attraction(page:int= Query(0, alias="page"), keyword:str=Query("",alias="keyword")):
 	#keyword用來完全比對捷運站名稱、或模糊比對景點名稱的關鍵字，沒有給定則不做篩選
@@ -433,6 +458,7 @@ async def get_attraction(page:int= Query(0, alias="page"), keyword:str=Query("",
 		cursor.close()
 		con.close()
 
+
 ### 取得景點編號取得景點資料
 @app.get("/api/attraction/{attractionID}", response_model=AttractionIDResponse)
 async  def get_attractionID(attractionID:int):
@@ -484,8 +510,169 @@ async def mrt_station():
 		con.close()
 		cursor.close()
 
-	
 
+## -------------------------------------API Order------------------------------------------
+### TapPay setting
+tapPayURL = 'https://sandbox.tappaysdk.com/tpc/payment/pay-by-prime'
+partnerKey = 'partner_XwOOWRbXKjjZZjmDtUNIcQvwDQwlcJ7tlyrF4bsK3sp2BeGU88KCeqec'
+merchantID = 'kyc_wehelptest_NCCC_KYC_Verification_Only'
+
+
+### 建立新的訂單，並完成付款程序
+@app.post('/api/orders', response_class= JSONResponse)
+async def post_order(res: Request,order: OrderForm):
+	#登入驗證
+	token = res.headers.get('Authorization')
+	if not token:
+		raise HTTPException(detail={"error":True,"message":"未登入系統"},status_code=403)
+	token = token.split(' ')[1]
+	
+	try:
+		payload = verify_token(token)
+		user_id = payload['user_id']
+		
+		con = connect_sql()
+		cursor = con.cursor()
+		#創建訂單編號
+		order_number = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+		#創建訂單
+		cursor.execute(
+			'''INSERT INTO booking(user_id,attractionID,date,time,price,booking_name,email,phone,order_number) 
+			VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)
+			''',(user_id, order.order.trip.attraction.attractionId, order.order.trip.date, order.order.trip.time, order.order.price, order.order.contact.name, order.order.contact.email, order.order.contact.phone, order_number )
+		)
+		con.commit()
+
+		if cursor.rowcount == 0:
+			return JSONResponse(content={'error': True, 'message': '預定行程失敗，請重新遞交表單'}, status_code=400)
+		
+		#付款
+		payByPrime = {
+			'prime': order.prime,
+			'partner_key': partnerKey,
+			'merchant_id': merchantID,
+			'details': 'TapPay Test',
+			'amount': order.order.price,
+			'cardholder':{
+				'phone_number': order.order.contact.phone,
+				'name': order.order.contact.name,
+				'email': order.order.contact.email,
+			},
+			'remember': True
+		}
+		
+		#跑tapPay交易
+		async with httpx.AsyncClient() as client :
+			response = await client.post(tapPayURL, headers={
+				'Content-Type': 'application/json',
+				'x-api-key': partnerKey
+			}, json = payByPrime)
+		
+		#付款成功or失敗
+		result = await response.json()
+		#付款成功status=0(int)
+		payment_status = result['status']
+		if payment_status != 0:
+			payment = {
+				'status': payment_status,
+				'message': result['msg']
+			}
+			return JSONResponse(content={'error': True, 'message': payment['message']}, status_code=400)
+		else:
+			payment = {
+				'status': 0,
+				'message': '付款成功'
+			}
+			cursor.execute(
+				'UPDATE booking SET payment_status = TRUE WHERE order_number = %s',(order_number, )
+			)
+
+		data = {
+			'number': order_number,
+			'payment': payment
+		}
+		return JSONResponse(content={'data': data}, status_code= 200)
+		
+	except Exception as e:
+		return JSONResponse(content={"error":True,"message":f"{e}連線錯誤，請重新註冊",},status_code=500)
+	finally:
+		cursor.close()
+		con.close()
+
+### 根據訂單編號取得訂單資訊
+@app.get('/api/orders/{orderNumber}', response_class= JSONResponse)
+def getOrder(res: Request, order_number: str):
+	#登入驗證
+	token = res.headers.get('Authorization')
+	if not token:
+		raise HTTPException(detail={"error":True,"message":"未登入系統"},status_code=403)
+	token = token.split(' ')[1]
+	
+	try:
+		payload = verify_token(token)
+		user_id = payload['user_id']
+		
+		con = connect_sql()
+		cursor = con.cursor()
+
+		#獲取訂單資訊
+		cursor.execute(
+			'''
+				SELECT order_number, price, attractionID, date, time, booking_name, emial, phone, payment_status 
+				FROM booking WHERE user_id = %s AND order_number = %s
+			''',(user_id, order_number)
+		)
+
+		orderInfor = cursor.fetchone()
+		
+		if orderInfor[8] == True:
+			payment_status = 0
+		else: 
+			payment_status = 1
+
+		attractionID = orderInfor[2]
+		if attractionID:
+			#獲取景點資訊
+			cursor.execute(
+				'SELECT name, address, images FROM attraction WHERE id = %s',(attractionID,)
+			)
+		attractionInfor = cursor.fetchone()
+		image = attractionInfor[2].split('.')[0]
+
+		data ={
+			'number': orderInfor[0],
+			'price': orderInfor[1],
+			'trip': {
+				'attraction':{
+					'id': attractionID,
+					'name': attractionInfor[0],
+					'address': attractionInfor[1],
+					'image': image
+				},
+				'date': orderInfor[3],
+				'time': orderInfor[4],
+			},
+			'contact': {
+				'name': orderInfor[5],
+				'email': orderInfor[6],
+				'phone': orderInfor[7]
+			},
+			'status': payment_status
+		}	
+		return OrderCheckdata(content={'data': data}, status_code = 200)
+	except mysql.connector.Error as e:
+		print(f'Error:{e}')
+		return JSONResponse(content={"error":True,'message':'連線錯誤，請重新嘗試'},status_code=500)
+	finally:
+		con.close()
+		cursor.close() 
+
+
+
+
+# if __name__=='__main__':
+# 	import uvicorn
+# 	uvicorn.run(app, host='0.0.0.0', port=8000)
 if __name__=='__main__':
 	import uvicorn
-	uvicorn.run(app, host='0.0.0.0', port=8000)
+	uvicorn.run(app, host='127.0.0.1', port=8000)
