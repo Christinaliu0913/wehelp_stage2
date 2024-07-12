@@ -98,7 +98,7 @@ db={
 	"user":"root",
 	"host":"localhost",
 	"database":"taipei",
-	"password":"12345678"
+	"password":"ASdf1234."
 }
 def connect_sql():
 	con = mysql.connector.connect(**db)
@@ -280,72 +280,72 @@ async def post_order(res: Request,order: OrderForm):
 		con.close()
 
 ### 根據訂單編號取得訂單資訊
-# @app.get('/api/orders/{orderNumber}', response_class= JSONResponse)
-# def getOrder(res: Request, order_number: str):
-# 	#登入驗證
-# 	token = res.headers.get('Authorization')
-# 	if not token:
-# 		raise HTTPException(detail={"error":True,"message":"未登入系統"},status_code=403)
-# 	token = token.split(' ')[1]
+@app.get('/api/orders/{orderNumber}', response_class= JSONResponse)
+def getOrder(res: Request, order_number: str):
+	#登入驗證
+	token = res.headers.get('Authorization')
+	if not token:
+		raise HTTPException(detail={"error":True,"message":"未登入系統"},status_code=403)
+	token = token.split(' ')[1]
 	
-# 	try:
-# 		payload = verify_token(token)
-# 		user_id = payload['user_id']
+	try:
+		payload = verify_token(token)
+		user_id = payload['user_id']
 		
-# 		con = connect_sql()
-# 		cursor = con.cursor()
+		con = connect_sql()
+		cursor = con.cursor()
 
-# 		#獲取訂單資訊
-# 		cursor.execute(
-# 			'''
-# 				SELECT order_number, price, attractionID, date, time, booking_name, emial, phone, payment_status 
-# 				FROM booking WHERE user_id = %s AND order_number = %s
-# 			''',(user_id, order_number)
-# 		)
+		#獲取訂單資訊
+		cursor.execute(
+			'''
+				SELECT order_number, price, attractionID, date, time, booking_name, emial, phone, payment_status 
+				FROM booking WHERE user_id = %s AND order_number = %s
+			''',(user_id, order_number)
+		)
 
-# 		orderInfor = cursor.fetchone()
+		orderInfor = cursor.fetchone()
 		
-# 		if orderInfor[8] == True:
-# 			payment_status = 0
-# 		else: 
-# 			payment_status = 1
+		if orderInfor[8] == True:
+			payment_status = 0
+		else: 
+			payment_status = 1
 
-# 		attractionID = orderInfor[2]
-# 		if attractionID:
-# 			#獲取景點資訊
-# 			cursor.execute(
-# 				'SELECT name, address, images FROM attraction WHERE id = %s',(attractionID,)
-# 			)
-# 		attractionInfor = cursor.fetchone()
-# 		image = attractionInfor[2].split('.')[0]
+		attractionID = orderInfor[2]
+		if attractionID:
+			#獲取景點資訊
+			cursor.execute(
+				'SELECT name, address, images FROM attraction WHERE id = %s',(attractionID,)
+			)
+		attractionInfor = cursor.fetchone()
+		image = attractionInfor[2].split('.')[0]
 
-# 		data ={
-# 			'number': orderInfor[0],
-# 			'price': orderInfor[1],
-# 			'trip': {
-# 				'attraction':{
-# 					'id': attractionID,
-# 					'name': attractionInfor[0],
-# 					'address': attractionInfor[1],
-# 					'image': image
-# 				},
-# 				'date': orderInfor[3],
-# 				'time': orderInfor[4],
-# 			},
-# 			'contact': {
-# 				'name': orderInfor[5],
-# 				'email': orderInfor[6],
-# 				'phone': orderInfor[7]
-# 			},
-# 			'status': payment_status
-# 		}	
-# 		return OrderCheckdata(content={'data': data}, status_code = 200)
-# 	except mysql.connector.Error as e:
-# 		print(f'Error:{e}')
-# 		return JSONResponse(content={"error":True,'message':'連線錯誤，請重新嘗試'},status_code=500)
-# 	finally:
-# 		con.close()
-# 		cursor.close() 
+		data ={
+			'number': orderInfor[0],
+			'price': orderInfor[1],
+			'trip': {
+				'attraction':{
+					'id': attractionID,
+					'name': attractionInfor[0],
+					'address': attractionInfor[1],
+					'image': image
+				},
+				'date': orderInfor[3],
+				'time': orderInfor[4],
+			},
+			'contact': {
+				'name': orderInfor[5],
+				'email': orderInfor[6],
+				'phone': orderInfor[7]
+			},
+			'status': payment_status
+		}	
+		return OrderCheckdata(content={'data': data}, status_code = 200)
+	except mysql.connector.Error as e:
+		print(f'Error:{e}')
+		return JSONResponse(content={"error":True,'message':'連線錯誤，請重新嘗試'},status_code=500)
+	finally:
+		con.close()
+		cursor.close() 
 
 
 
