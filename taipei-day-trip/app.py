@@ -98,7 +98,7 @@ db={
 	"user":"root",
 	"host":"localhost",
 	"database":"taipei",
-	"password":"ASdf1234."
+	"password":"12345678"
 }
 def connect_sql():
 	con = mysql.connector.connect(**db)
@@ -126,9 +126,9 @@ async def thankyou(request: Request):
 async def validation_exception(req: Request, exc: RequestValidationError):
 	return RedirectResponse(url='/')
 ### 處理其他異常
-@app.exception_handler(Exception)
-async def global_exception(req: Request, exc: Exception):
-	return RedirectResponse(url='/')
+# @app.exception_handler(Exception)
+# async def global_exception(req: Request, exc: Exception):
+# 	return RedirectResponse(url='/')
 
 #--------------------password------------------------------------|
 #創建cryptContext對象->使用bcrypt演算法/
@@ -189,6 +189,163 @@ def verify_token(token:str):
 
 
 
+## -------------------------------------API Order------------------------------------------
+### TapPay setting
+tapPayURL = 'https://sandbox.tappaysdk.com/tpc/payment/pay-by-prime'
+partnerKey = 'partner_XwOOWRbXKjjZZjmDtUNIcQvwDQwlcJ7tlyrF4bsK3sp2BeGU88KCeqec'
+merchantID = 'kyc_wehelptest_NCCC_KYC_Verification_Only'
+
+
+### 建立新的訂單，並完成付款程序
+@app.get('/api/orders', response_class= JSONResponse)
+async def post_order(res: Request,order: OrderForm):
+	#登入驗證
+	token = res.headers.get('Authorization')
+	if not token:
+		raise HTTPException(detail={"error":True,"message":"未登入系統"},status_code=403)
+	token = token.split(' ')[1]
+	
+	try:
+		payload = verify_token(token)
+		user_id = payload['user_id']
+		
+		con = connect_sql()
+		cursor = con.cursor()
+		#創建訂單編號
+		
+		order_number = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+		#創建訂單
+		cursor.execute(
+			'''INSERT INTO booking(user_id,attractionID,date,time,price,booking_name,email,phone,order_number) 
+			VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)
+			''',(user_id, order.order.trip.attraction.attractionId, order.order.trip.date, order.order.trip.time, order.order.price, order.order.contact.name, order.order.contact.email, order.order.contact.phone, order_number )
+		)
+		con.commit()
+
+		if cursor.rowcount == 0:
+			return JSONResponse(content={'error': True, 'message': '預定行程失敗，請重新遞交表單'}, status_code=400)
+		
+		#付款
+		payByPrime = {
+			'prime': order.prime,
+			'partner_key': partnerKey,
+			'merchant_id': merchantID,
+			'details': 'TapPay Test',
+			'amount': order.order.price,
+			'cardholder':{
+				'phone_number': order.order.contact.phone,
+				'name': order.order.contact.name,
+				'email': order.order.contact.email,
+			},
+			'remember': True
+		}
+		
+		#跑tapPay交易
+		async with httpx.AsyncClient() as client :
+			response = await client.post(tapPayURL, headers={
+				'Content-Type': 'application/json',
+				'x-api-key': partnerKey
+			}, json = payByPrime)
+		
+		#付款成功or失敗
+		result = await response.json()
+		#付款成功status=0(int)
+		payment_status = result['status']
+		if payment_status != 0:
+			payment = {
+				'status': payment_status,
+				'message': result['msg']
+			}
+			return JSONResponse(content={'error': True, 'message': payment['message']}, status_code=400)
+		else:
+			payment = {
+				'status': 0,
+				'message': '付款成功'
+			}
+			cursor.execute(
+				'UPDATE booking SET payment_status = TRUE WHERE order_number = %s',(order_number, )
+			)
+			con.commit()
+
+		data = {
+			'number': order_number,
+			'payment': payment
+		}
+		return JSONResponse(content={'data': data}, status_code= 200)
+		
+	except Exception as e:
+		return JSONResponse(content={"error":True,"message":f"{e}連線錯誤，請重新註冊",},status_code=500)
+	finally:
+		cursor.close()
+		con.close()
+
+### 根據訂單編號取得訂單資訊
+# @app.get('/api/orders/{orderNumber}', response_class= JSONResponse)
+# def getOrder(res: Request, order_number: str):
+# 	#登入驗證
+# 	token = res.headers.get('Authorization')
+# 	if not token:
+# 		raise HTTPException(detail={"error":True,"message":"未登入系統"},status_code=403)
+# 	token = token.split(' ')[1]
+	
+# 	try:
+# 		payload = verify_token(token)
+# 		user_id = payload['user_id']
+		
+# 		con = connect_sql()
+# 		cursor = con.cursor()
+
+# 		#獲取訂單資訊
+# 		cursor.execute(
+# 			'''
+# 				SELECT order_number, price, attractionID, date, time, booking_name, emial, phone, payment_status 
+# 				FROM booking WHERE user_id = %s AND order_number = %s
+# 			''',(user_id, order_number)
+# 		)
+
+# 		orderInfor = cursor.fetchone()
+		
+# 		if orderInfor[8] == True:
+# 			payment_status = 0
+# 		else: 
+# 			payment_status = 1
+
+# 		attractionID = orderInfor[2]
+# 		if attractionID:
+# 			#獲取景點資訊
+# 			cursor.execute(
+# 				'SELECT name, address, images FROM attraction WHERE id = %s',(attractionID,)
+# 			)
+# 		attractionInfor = cursor.fetchone()
+# 		image = attractionInfor[2].split('.')[0]
+
+# 		data ={
+# 			'number': orderInfor[0],
+# 			'price': orderInfor[1],
+# 			'trip': {
+# 				'attraction':{
+# 					'id': attractionID,
+# 					'name': attractionInfor[0],
+# 					'address': attractionInfor[1],
+# 					'image': image
+# 				},
+# 				'date': orderInfor[3],
+# 				'time': orderInfor[4],
+# 			},
+# 			'contact': {
+# 				'name': orderInfor[5],
+# 				'email': orderInfor[6],
+# 				'phone': orderInfor[7]
+# 			},
+# 			'status': payment_status
+# 		}	
+# 		return OrderCheckdata(content={'data': data}, status_code = 200)
+# 	except mysql.connector.Error as e:
+# 		print(f'Error:{e}')
+# 		return JSONResponse(content={"error":True,'message':'連線錯誤，請重新嘗試'},status_code=500)
+# 	finally:
+# 		con.close()
+# 		cursor.close() 
 
 
 
@@ -511,161 +668,6 @@ async def mrt_station():
 		cursor.close()
 
 
-## -------------------------------------API Order------------------------------------------
-### TapPay setting
-tapPayURL = 'https://sandbox.tappaysdk.com/tpc/payment/pay-by-prime'
-partnerKey = 'partner_XwOOWRbXKjjZZjmDtUNIcQvwDQwlcJ7tlyrF4bsK3sp2BeGU88KCeqec'
-merchantID = 'kyc_wehelptest_NCCC_KYC_Verification_Only'
-
-
-### 建立新的訂單，並完成付款程序
-@app.post('/api/orders', response_class= JSONResponse)
-async def post_order(res: Request,order: OrderForm):
-	#登入驗證
-	token = res.headers.get('Authorization')
-	if not token:
-		raise HTTPException(detail={"error":True,"message":"未登入系統"},status_code=403)
-	token = token.split(' ')[1]
-	
-	try:
-		payload = verify_token(token)
-		user_id = payload['user_id']
-		
-		con = connect_sql()
-		cursor = con.cursor()
-		#創建訂單編號
-		order_number = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-		#創建訂單
-		cursor.execute(
-			'''INSERT INTO booking(user_id,attractionID,date,time,price,booking_name,email,phone,order_number) 
-			VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)
-			''',(user_id, order.order.trip.attraction.attractionId, order.order.trip.date, order.order.trip.time, order.order.price, order.order.contact.name, order.order.contact.email, order.order.contact.phone, order_number )
-		)
-		con.commit()
-
-		if cursor.rowcount == 0:
-			return JSONResponse(content={'error': True, 'message': '預定行程失敗，請重新遞交表單'}, status_code=400)
-		
-		#付款
-		payByPrime = {
-			'prime': order.prime,
-			'partner_key': partnerKey,
-			'merchant_id': merchantID,
-			'details': 'TapPay Test',
-			'amount': order.order.price,
-			'cardholder':{
-				'phone_number': order.order.contact.phone,
-				'name': order.order.contact.name,
-				'email': order.order.contact.email,
-			},
-			'remember': True
-		}
-		
-		#跑tapPay交易
-		async with httpx.AsyncClient() as client :
-			response = await client.post(tapPayURL, headers={
-				'Content-Type': 'application/json',
-				'x-api-key': partnerKey
-			}, json = payByPrime)
-		
-		#付款成功or失敗
-		result = await response.json()
-		#付款成功status=0(int)
-		payment_status = result['status']
-		if payment_status != 0:
-			payment = {
-				'status': payment_status,
-				'message': result['msg']
-			}
-			return JSONResponse(content={'error': True, 'message': payment['message']}, status_code=400)
-		else:
-			payment = {
-				'status': 0,
-				'message': '付款成功'
-			}
-			cursor.execute(
-				'UPDATE booking SET payment_status = TRUE WHERE order_number = %s',(order_number, )
-			)
-
-		data = {
-			'number': order_number,
-			'payment': payment
-		}
-		return JSONResponse(content={'data': data}, status_code= 200)
-		
-	except Exception as e:
-		return JSONResponse(content={"error":True,"message":f"{e}連線錯誤，請重新註冊",},status_code=500)
-	finally:
-		cursor.close()
-		con.close()
-
-### 根據訂單編號取得訂單資訊
-@app.get('/api/orders/{orderNumber}', response_class= JSONResponse)
-def getOrder(res: Request, order_number: str):
-	#登入驗證
-	token = res.headers.get('Authorization')
-	if not token:
-		raise HTTPException(detail={"error":True,"message":"未登入系統"},status_code=403)
-	token = token.split(' ')[1]
-	
-	try:
-		payload = verify_token(token)
-		user_id = payload['user_id']
-		
-		con = connect_sql()
-		cursor = con.cursor()
-
-		#獲取訂單資訊
-		cursor.execute(
-			'''
-				SELECT order_number, price, attractionID, date, time, booking_name, emial, phone, payment_status 
-				FROM booking WHERE user_id = %s AND order_number = %s
-			''',(user_id, order_number)
-		)
-
-		orderInfor = cursor.fetchone()
-		
-		if orderInfor[8] == True:
-			payment_status = 0
-		else: 
-			payment_status = 1
-
-		attractionID = orderInfor[2]
-		if attractionID:
-			#獲取景點資訊
-			cursor.execute(
-				'SELECT name, address, images FROM attraction WHERE id = %s',(attractionID,)
-			)
-		attractionInfor = cursor.fetchone()
-		image = attractionInfor[2].split('.')[0]
-
-		data ={
-			'number': orderInfor[0],
-			'price': orderInfor[1],
-			'trip': {
-				'attraction':{
-					'id': attractionID,
-					'name': attractionInfor[0],
-					'address': attractionInfor[1],
-					'image': image
-				},
-				'date': orderInfor[3],
-				'time': orderInfor[4],
-			},
-			'contact': {
-				'name': orderInfor[5],
-				'email': orderInfor[6],
-				'phone': orderInfor[7]
-			},
-			'status': payment_status
-		}	
-		return OrderCheckdata(content={'data': data}, status_code = 200)
-	except mysql.connector.Error as e:
-		print(f'Error:{e}')
-		return JSONResponse(content={"error":True,'message':'連線錯誤，請重新嘗試'},status_code=500)
-	finally:
-		con.close()
-		cursor.close() 
 
 
 

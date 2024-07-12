@@ -824,6 +824,37 @@ header{
     font-size: 19px;
     cursor: pointer;
 }
+/*----------thank you---------*/
+.thankcard{
+    display: flex;
+    justify-content: center;
+    margin-top: 80px;
+}
+.thankcard-box{
+    display: flex;
+    align-items: center;
+    border-radius: 5px;
+    box-shadow: 0px 0px 10px #66666650;
+    height: auto;
+    padding: 30px;
+    width: 400px;
+}
+.thankcard-orderIcon img{
+    width: 40px;
+    height: 40px;
+}
+.thankcard-infor{
+    flex: auto;
+    margin-left: 20px;
+}
+.thank-inform{
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+
+
 /*footer*/
 .footer{
     min-height: 200px;

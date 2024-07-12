@@ -325,20 +325,24 @@ async function sendPrimeToSever(prime){
 
 //---------------------------
 function postOrder(bookingForm){
-  fetch(orderURL,{
+  fetch('/api/orders',{
     method: "POST",
     headers: {
       'Authorization':`Bearer ${token}`,
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json'
     },
     body: JSON.stringify(bookingForm)
-  }).then(req => {
-    req.json();
-  }).then(result =>{
+  }).then(req => 
+    req.json()
+  ).then(result =>{
     if(result.error){
-      console.log(result.message)
+      alert(result.message);
+      console.log(result.message);
+      return;
     }else{
       alert('訂購成功')
+      console.log(result.detail)
+      console.log('outcome:',result)
     }
   }).catch(error => {
   alert(error.message)

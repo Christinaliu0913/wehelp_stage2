@@ -2,10 +2,55 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <link rel="stylesheet" type='text/css' href="/static/style.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Thank You</title>
 </head>
 <body>
-  
+
+<div class="wrapper">
+  <!---------nav----------->
+  <header>
+    <nav class="nav">
+      <h2 class="nav-title"><a href="/" style="text-decoration: none; color: inherit;">台北一日遊</a></h2>
+      <ul class="nav-list">
+        <li class="nav-list-item" id='nav-booking' onclick="booking()">預定行程</li>
+        <li class="nav-list-item" id='nav-signin'onclick="signIn()">登入/註冊</li>
+        <li class="nav-list-item" id='nav-signout' onclick="signOut()">登出系統</li>
+      </ul>
+    </nav>
+  </header>
+  <!---------card----------->
+  <div>
+    <div class="thankcard">
+      <div class="thankcard-box">
+        <div class="thankcard-orderIcon"><img src="/static/img/accept.png" alt=""></div>
+        <div class="thankcard-infor">
+          <h3>訂購成功</h3>
+          <div class="thankcard-orderNumber">
+            訂單編號: asdfasdfa
+          </div>
+          <div>
+            訂購人姓名：
+          </div>
+        </div>
+        
+      </div>
+      
+    </div>
+    <div class="thank-inform">
+      <div>回到首頁</div>
+    </div>
+  </div>
+
+
+</div>
+
+
+
+  <!-----------footer----------->
+  <footer class="footer"><p class="footer-text">COPYRIGHT©2024台北一日遊</p></footer>
+  <script src="/static/thankyou.js"></script>
 </body>
+
 </html>
