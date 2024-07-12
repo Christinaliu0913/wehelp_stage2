@@ -59,118 +59,129 @@ window.addEventListener('load',function(){
   function signOut(){
     localStorage.removeItem('token');
     alert('成功登出！');
-    document.getElementById('nav-signin').style.display = 'flex';
-    document.getElementById('nav-signout').style.display = 'none';
+    location.reload();
   }
-//註冊送出表單
-  function signUpAPI(){
-    const signUpName = document.getElementById('signUpName').value.trim();
-    const signUpEmail = document.getElementById('signUpEmail').value.trim();
-    const signUpPassword = document.getElementById('signUpPassword').value.trim();
-    const errorMessage = document.getElementById('signUpError');
-    //檢查是否所有格子已填寫
-    if(!signUpName || !signUpEmail || !signUpPassword){
-      alert('請填妥所有資訊');
-      errorMessage.textContent = '';
-      return;
+//|------------------預定行程-----------------------|
+//提醒登入狀態
+function booking(){
+  //提醒登入狀態
+  if (token){
+    window.location.href = '/booking';
+  }else{
+    alert('先請登入系統');
+    signIn();
+  }
+}
+
+  //註冊送出表單
+    function signUpAPI(){
+      const signUpName = document.getElementById('signUpName').value.trim();
+      const signUpEmail = document.getElementById('signUpEmail').value.trim();
+      const signUpPassword = document.getElementById('signUpPassword').value.trim();
+      const errorMessage = document.getElementById('signUpError');
+      //檢查是否所有格子已填寫
+      if(!signUpName || !signUpEmail || !signUpPassword){
+        alert('請填妥所有資訊');
+        errorMessage.textContent = '';
+        return;
+      }
+
+      fetch('/api/user',{
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({name:signUpName,email:signUpEmail,password:signUpPassword})
+      }).then(res => {return res.json()}).then(result =>{
+        //若是fetch到回覆error，則出現提示字樣
+        if(result.error){
+          errorMessage.textContent = '';
+          errorMessage.textContent = result.message;
+        }else{
+          alert('註冊成功!');
+          //清空輸入框和錯誤消息
+          document.querySelector('#signup-form').reset();
+          errorMessage.textContent = '';
+        }
+      }).catch(error => {
+        errorMessage.textContent = error.message;
+        console.error("Error:",error)
+      })
+    }
+  //登入
+  function signInAPI(){
+    const signInEmail = document.getElementById('signInEmail').value.trim();
+    const signInPassword = document.getElementById('signInPassword').value.trim();
+    const signInError = document.getElementById('signInError')
+    //清理錯誤訊息
+    signInError.textContent = '';
+
+    if(!signInEmail || !signInPassword){
+      alert('請填入帳號與密碼');
+      signInError.textContent = '';
+      return ;
     }
 
-    fetch('/api/user',{
-      method: "POST",
+    fetch('/api/user/auth',{
+      method: "PUT",
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({name:signUpName,email:signUpEmail,password:signUpPassword})
-    }).then(res => {return res.json()}).then(result =>{
-      //若是fetch到回覆error，則出現提示字樣
+      body: JSON.stringify({email:signInEmail,password:signInPassword})
+    }).then(res => {
+      if(!res.ok){
+        signInError.textContent = '';
+        signInError.textContent =  res.message;
+        }
+      return res.json();
+    }).then(result =>{
       if(result.error){
-        errorMessage.textContent = '';
-        errorMessage.textContent = result.message;
+        signInError.textContent = '';
+        signInError.textContent =  result.message;
       }else{
-        alert('註冊成功!');
-        //清空輸入框和錯誤消息
-        document.querySelector('#signup-form').reset();
-        errorMessage.textContent = '';
+        //將token儲存至localStorage
+        localStorage.setItem('token', result.token)
+        alert('成功登入！');
+        signinClose();
+        Showsigned();
+        document.querySelector('#signin-form').reset();
+        location.reload()
       }
-    }).catch(error => {
-      errorMessage.textContent = error.message;
-      console.error("Error:",error)
+    }).catch(error =>{
+      console.log('Error:', error);
+      signInError.textContent = error.error;
     })
-  }
-//登入
-function signInAPI(){
-  const signInEmail = document.getElementById('signInEmail').value.trim();
-  const signInPassword = document.getElementById('signInPassword').value.trim();
-  const signInError = document.getElementById('signInError')
-  //清理錯誤訊息
-  signInError.textContent = '';
-
-  if(!signInEmail || !signInPassword){
-    alert('請填入帳號與密碼');
-    signInError.textContent = '';
-    return ;
+      
   }
 
-  fetch('/api/user/auth',{
-    method: "PUT",
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({email:signInEmail,password:signInPassword})
-  }).then(res => {
-    if(!res.ok){
-      signInError.textContent = '';
-      signInError.textContent =  res.message;
-      }
-    return res.json();
-  }).then(result =>{
-    if(result.error){
-      signInError.textContent = '';
-      signInError.textContent =  result.message;
-    }else{
-      //將token儲存至localStorage
-      localStorage.setItem('token', result.token)
-      alert('成功登入！');
-      signinClose();
-      Showsigned();
-      document.querySelector('#signin-form').reset();
-      signInError.textContent = '';
+  //檢查是否登入狀態
+  async function checkSigned(){
+    if (!token){
+      console.log('not signed in');
+      return;//直接返回
     }
-  }).catch(error =>{
-    console.log('Error:', error);
-    signInError.textContent = error.error;
-  })
+
+    try{
+      const tokenRes = await fetch(getTokenURL,{
+        method: 'GET',
+        headers:{
+          'Authorization' : `Bearer ${token}` //發送token進行驗證
+        }
+      })
+      if(tokenRes.ok){
+        const tokenResult = await tokenRes.json();
+        Showsigned();
+        console.log("Login verified:", tokenResult);
+      }else{
+        console.error('Failed to verify login', await tokenRes.json());
+        localStorage.removeItem('token');//驗證失敗，清除不正確的token
+      }
+    }catch(error){
+        console.error('Error:',error);
+        alert('加油好嗎？');
+      }
     
-}
-
-//檢查是否登入狀態
-async function checkSigned(){
-  if (!token){
-    console.log('not signed in');
-    return;//直接返回
-  }
-
-  try{
-    const tokenRes = await fetch(getTokenURL,{
-      method: 'GET',
-      headers:{
-        'Authorization' : `Bearer ${token}` //發送token進行驗證
-      }
-    })
-    if(tokenRes.ok){
-      const tokenResult = await tokenRes.json();
-      Showsigned();
-      console.log("Login verified:", tokenResult);
-    }else{
-      console.error('Failed to verify login', await tokenRes.json());
-      localStorage.removeItem('token');//驗證失敗，清除不正確的token
-    }
-  }catch(error){
-      console.error('Error:',error);
-      alert('加油好嗎？');
-    }
-  
-};
+  };
 
 //---------attraction單頁page------------------|
 
@@ -328,3 +339,60 @@ function imgLeft(){
 function imgRight(){
     showIMG(currentIMGIndex + 1);
 };
+
+
+//---------------送出表單-------------------------|
+const bookingURL = '/api/booking'
+document.getElementById('bookingForm').addEventListener('submit',function(event){
+  event.preventDefault();
+
+  //確認是否登入
+  if(!token){
+    alert('請先登入系統');
+    signIn();
+    return;
+  }
+
+  const bookingData = new FormData(this);
+  //勾選的時間
+  const seletedTime = document.querySelector('input[name="time"]:checked');
+  const time = seletedTime ? seletedTime.value :null;
+  //勾選日期
+  const date = bookingData.get('date')
+  const price = document.getElementById('fee').textContent.replace('新台幣','').replace('元','').trim()
+  //確認是有有填選完畢選單
+  if(!date || !time){
+    alert('請填選所有資訊');
+    return;
+  }
+  
+  //表單資料
+  const data = {
+    attractionId : parseInt(window.location.pathname.split('/').pop()),
+    date: date,
+    time: time,
+    price: parseInt(price) 
+  }
+  console.log('Sending data:', data);
+  
+  fetch(bookingURL,{
+    method:'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  })
+  .then(res => res.json())
+  .then(result => {
+    if(result.ok){
+      alert('預定成功');
+    }else{
+      alert(result.message);
+    }
+  })
+  .catch(error => {
+    console.error('Error',error);
+    alert(error.message);
+  })
+  });

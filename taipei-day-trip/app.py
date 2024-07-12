@@ -28,6 +28,7 @@ app.add_middleware(
     allow_headers=["*"], #允許所有標頭(headers)
 )
 #---------------------BaseModel資料型態----------------------|
+
 ### User 資料型態
 class User(BaseModel):
 	name: str
@@ -41,7 +42,7 @@ class Attraction(BaseModel):
 	id: int
 	name: str
 	category: Optional[str]
-	description: str
+	description: Optional[str]
 	address: Optional[str]
 	transport: Optional[str]
 	mrt: Optional[str]
@@ -55,7 +56,23 @@ class AttractionIDResponse(BaseModel):
 	data: List[Attraction]
 class MrtStationResponse(BaseModel):
 	data: List
-#-----------------------連線至mysql-------------------------|
+### Booking 資料型態
+class BookingPost(BaseModel):
+	attractionId: int
+	date: str
+	time: str
+	price: int
+class BookingAttraction(BaseModel):
+	attractionId: int
+	name: str
+	address: str
+	image: str
+class BookingResponse(BaseModel):
+	attraction: Optional[List[BookingAttraction]]
+	date: Optional[str]
+	time: Optional[str]
+	price: Optional[int]
+#-----------------------連線至mysql-------------------------------|
 db={
 	"user":"root",
 	"host":"localhost",
@@ -92,7 +109,7 @@ async def validation_exception(req: Request, exc: RequestValidationError):
 async def global_exception(req: Request, exc: Exception):
 	return RedirectResponse(url='/')
 
-#----------------password---------------------|
+#--------------------password------------------------------------|
 #創建cryptContext對象->使用bcrypt演算法/
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')#deprecated自動處理過期的哈希算法
 
@@ -146,11 +163,137 @@ def verify_token(token:str):
 	except ExpiredSignatureError:
 		raise HTTPException(status_code=401, detail='token has expired')
 
+## API Booking---------------------------------------
+### 取得會員預定資訊
+@app.get('/api/booking', response_class= JSONResponse)
+def getBooking(res: Request):
+	token = res.headers.get('Authorization')
+	#若是沒有token代表沒有登入
+	if not token:
+		raise HTTPException(detail={"error":True,"message":"未登入系統"},status_code=403)
+	token = token.split(' ')[1]
+	
+	try: 
+		payload = verify_token(token)
+		user_id = payload['user_id']
+		
+		con=connect_sql()
+		cursor=con.cursor()
+
+		cursor.execute(
+			'select attractionID, date, time, price from member where id = %s;',(user_id,))
+		booking = cursor.fetchone()
+
+		if not booking or booking[0] is None:
+			return JSONResponse(content={'data': None},status_code=200)
+		
+		attraction_id = booking[0]
+		cursor.execute('SELECT id, name, address, images FROM attraction WHERE id = %s;',(attraction_id,))
+		attraction = cursor.fetchone()
+
+		if attraction : 
+			attraction_image = attraction[3].split(',')[0] if attraction[3] else None
+			data = {
+				'data':{
+					'attraction':{
+						'id': int(attraction[0]),
+						'name': attraction[1],
+						'address': attraction[2],
+						'image': attraction_image
+					},
+				'date': booking[1].strftime('%Y-%m-%d'),
+				'time': booking[2],
+				'price': int(booking[3])
+				}
+			}
+			return JSONResponse(content=data,status_code=200)
+		else:
+			return JSONResponse(content={'data':None},status_code=200)
+	except mysql.connector.Error as e:
+		print(f'Error:{e}')
+		return JSONResponse(content={"error":True,'message':'連線錯誤，請重新嘗試'},status_code=500)
+	finally:
+		con.close()
+		cursor.close() 
+
+### 預定行程
+@app.post('/api/booking', response_class= JSONResponse)
+def postBooking(res: Request,booking: BookingPost):
+	token = res.headers.get('Authorization')
+	if not token: 
+		raise HTTPException(detail={'error':True,'message':'未登入系統'},status_code=403)
+	
+	token = token.split(' ')[1]
+
+	try:
+		payload = verify_token(token)
+		user_id = payload['user_id']
+
+		con=connect_sql()
+		cursor=con.cursor()
+
+
+		cursor.execute(
+			'''
+			SELECT attractionID, date, time FROM member WHERE id =%s;
+			''',(user_id,)
+		)
+		result  = cursor.fetchone()
+		if result:
+			attractionid, date,time = result
+			if attractionid == booking.attractionId and str(date) == booking.date and time == booking.time:
+				return JSONResponse(content={'error': True, 'message': '已預定此行程'}, status_code=400)
+
+		cursor.execute(
+			'''
+			UPDATE member SET attractionID = %s, date = %s, time = %s, price =%s WHERE id =%s;
+			''',(booking.attractionId, booking.date, booking.time, booking.price,user_id)
+		)
+		con.commit()
+		if cursor.rowcount > 0:
+			return JSONResponse(content={'ok': True},status_code=200)
+		else:
+			return JSONResponse(content={'error': True, 'message': '預定行程失敗'}, status_code=400)
+	except mysql.connector.Error:
+		return JSONResponse(content={"error":True,'message':'連線錯誤，請重新嘗試'},status_code=500)
+	finally:
+		cursor.close()
+		con.close()
+		 
+
+## 刪除行程
+@app.delete('/api/booking', response_class= JSONResponse)
+def deleteBooking(res: Request):
+	token = res.headers.get('Authorization')
+	if not token: 
+		raise HTTPException(content={'error':True,'message':'未登入系統'},status_code=403)
+	token = token.split(' ')[1]
+	
+	try: 
+		payload = verify_token(token)
+		user_id = payload['user_id']
+		con=connect_sql()
+		cursor = con.cursor()
+
+		cursor.execute(
+			'''
+			UPDATE member SET attractionID = NULL, date = NULL, time = NULL, price = NULL WHERE id =%s;
+			''',(user_id, )
+		)
+		con.commit()
+		
+		if cursor.rowcount > 0:
+			return JSONResponse(content={'ok':True},status_code=200)
+	except mysql.connector.Error:
+		return JSONResponse(content={"error":True,'message':'連線錯誤，請重新嘗試'},status_code=500)
+	finally:
+		con.close()
+		cursor.close() 
 
 
 ## API User---------------------------------------
 ### 登入會員帳戶 (PUT)
-@app.put("/api/user/auth", response_class=JSONResponse)
+@app.put("/api/user/auth", response_class = JSONResponse)
 def sign_in(user: UserResponse):
 	con=connect_sql()
 	cursor=con.cursor()
@@ -174,8 +317,9 @@ def sign_in(user: UserResponse):
 	except mysql.connector.Error:
 		return JSONResponse(content={"error":True,'message':'連線錯誤，請重新嘗試'},status_code=500)
 	finally:
-		con.close()
 		cursor.close()
+		con.close()
+		
 		
 #取得當前登入的會員資訊 (GET)
 @app.get('/api/user/auth', response_class=JSONResponse)

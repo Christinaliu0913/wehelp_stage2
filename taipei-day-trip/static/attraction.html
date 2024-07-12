@@ -13,7 +13,7 @@
       <nav class="nav">
         <h2 class="nav-title"><a href="/" style="text-decoration: none; color: inherit;">台北一日遊</a></h2>
         <ul class="nav-list">
-          <li class="nav-list-item">預定行程</li>
+          <li class="nav-list-item" id='nav-booking' onclick="booking()">預定行程</li>
           <li class="nav-list-item" id='nav-signin'onclick="signIn()">登入/註冊</li>
           <li class="nav-list-item" id='nav-signout' onclick="signOut()">登出系統</li>
         </ul>
@@ -38,17 +38,17 @@
           <div class="attraction-intro-info-upper">
           </div>
           <div class="attraction-intro-info-form">
-            <form action="post">
+            <form id="bookingForm">
               <div>訂購導覽行程</div>
               <div><p>以此景點為中心的一日行程，帶您探索城市角落故事</p></div>
-              <div class="date">選擇日期：<input type="date"></div>
+              <div class="date">選擇日期：<input name="date" type="date"></div>
               <div class="datetype">選擇時間：
                 <label for="morning">
-                  <input type="radio" name="time" id="morning" value="2000" onclick="ChooseFee()">上半天</label>
+                  <input type="radio" name="time" id="morning" value="上午9點到下午4點" onclick="ChooseFee()">上半天</label>
                 <label for="afternoon">
-                  <input type="radio" name="time" id="afternoon" value="2500" onclick="ChooseFee()">下半天</label>
+                  <input type="radio" name="time" id="afternoon" value="下午4點到晚上9點" onclick="ChooseFee()">下半天</label>
               </div>
-              <div class="fee">導覽費用：<p id="fee">新台幣2000元</p></div>
+              <div class="fee">導覽費用：<p id="fee" name="fee">新台幣2000元</p></div>
               <button type="submit">開始預約行程</button>
             </form>
           </div>
