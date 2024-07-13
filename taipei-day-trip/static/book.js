@@ -214,7 +214,6 @@ document.getElementById('reserve-button').addEventListener('click',function(even
       console.log('Error:', result);
       return;
     }
-    alert('get prime成功，prime'+result.card.prime)
     //將prime傳送到sever端
     const prime = result.card.prime;
     sendPrimeToSever(prime);
