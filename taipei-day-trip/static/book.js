@@ -126,23 +126,6 @@ function deleteBooking(){
     })
 }
     
-//--------------信用卡表單設定----------------
-
-// //卡片號碼設置
-// document.getElementById('card-number').addEventListener('input',function(event){
-//   let value = event.target.value.replace(/\D/g, '');
-//   value = value.substring(0,16)
-//   event.target.value = value.replace(/(\d{4})(?=\d)/g, '$1 ')
-// });
-
-// //過期時間設置
-// document.getElementById('card-expiration-date').addEventListener('input',function(event){
-//   let value = event.target.value.replace(/\D/g, '');
-//   if (value.length >= 3){
-//     value = value.slice(0,2) + '/' +value.slice(2);
-//   }
-//   event.target.value = value.substring(0,5);
-// });
 
 
 //-------------TapPay設定與串接----------------------
