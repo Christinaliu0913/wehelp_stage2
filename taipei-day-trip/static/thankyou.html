@@ -24,14 +24,16 @@
   <div>
     <div class="thankcard">
       <div class="thankcard-box">
-        <div class="thankcard-orderIcon"><img src="/static/img/accept.png" alt=""></div>
+        <div class="thankcard-orderIcon"><img id="img" src="/static/img/accept.png" alt=""></div>
         <div class="thankcard-infor">
-          <h3>訂購成功</h3>
+          <div><h3 id="paymentStatus"></h3></div>
           <div class="thankcard-orderNumber">
-            訂單編號: asdfasdfa
+            訂單編號： <span id="orderNumber"> </span>
           </div>
           <div>
-            訂購人姓名：
+            訂購人姓名： <span id="orderName"></span>
+          </div>
+          <div id="ifUnpaid">
           </div>
         </div>
         
@@ -39,7 +41,7 @@
       
     </div>
     <div class="thank-inform">
-      <div>回到首頁</div>
+      <div><a href="/">回到首頁</a></div>
     </div>
   </div>
 

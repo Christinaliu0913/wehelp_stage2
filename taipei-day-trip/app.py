@@ -18,6 +18,7 @@ from passlib.context import CryptContext
 import json
 import httpx
 import logging
+import requests
 
 app=FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -93,7 +94,7 @@ class OrderCheckdata(BaseModel):
 	price: int
 	trip: Trip 
 	contact: Contact
-	status: int
+	status: bool
 #-----------------------連線至mysql-------------------------------|
 db={
 	"user":"root",
@@ -201,57 +202,10 @@ def verify_token(token:str):
 ### TapPay setting
 tapPayURL = 'https://sandbox.tappaysdk.com/tpc/payment/pay-by-prime'
 partnerKey = 'partner_XwOOWRbXKjjZZjmDtUNIcQvwDQwlcJ7tlyrF4bsK3sp2BeGU88KCeqec'
-merchantID = 'kyc_wehelptest_NCCC_KYC_Verification_Only'
+merchantID = 'wehelptest_CTBC_Union_Pay'
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-@app.post('/pay')
-async def pay(res: Request,booking: OrderForm):
-	try:
-		prime = booking.prime
-		order = booking.order
-
-		token = res.headers.get('Authorization')
-		if not token:
-			raise HTTPException(detail={"error":True,"message":"未登入系統"},status_code=403)
-		token = token.split(' ')[1]
-		payload = verify_token(token)
-		user_id = payload['user_id']
-		
-		tappay_payload ={
-			'prime': prime,
-			'partner_key': partnerKey,
-			'merchant_id': merchantID,
-			'amount': order.price,
-			'details': 'test pay',
-			'cardholder': {
-				'phone_number': order.contact.phone,
-				'name': order.contact.name,
-				'email': order.contact.email
-			},
-			'remember': True
-		}
-		headers = {
-			'Content-Type':'application/json',
-			'x-api-key': partnerKey
-		}
-		
-		logger.info("Sending request to TapPay")
-		async with httpx.AsyncClient() as client: # 修改點 1: 使用 httpx.AsyncClient 进行异步请求
-			response = await client.post(tapPayURL, headers=headers, json=tappay_payload)
-			result = response.json()
-			
-		logger.info("Received response from TapPay")
-		if response.status_code != 200 or result["status"] != 0:
-			raise HTTPException(status_code=400, detail=f"Payment failed: {result.get('msg', 'unknown error')}")
-		
-		return {
-            "message": "Payment succeeded",
-            "details": result
-        }
-	except Exception as e:
-		logger.error(f"Error processing payment: {e}") # 修改點 2: 添加详细的日志和错误处理
-		raise HTTPException(status_code=500, detail="Internal Server Error")
 
 ### 建立新的訂單，並完成付款程序
 @app.post('/api/orders', response_class= JSONResponse)
@@ -285,8 +239,8 @@ async def post_order(res: Request,order: OrderForm):
 		#付款
 		payByPrime = {
 			'prime': order.prime,
-			'partner_key': partnerKey,
-			'merchant_id': merchantID,
+			'partner_key': 'partner_XwOOWRbXKjjZZjmDtUNIcQvwDQwlcJ7tlyrF4bsK3sp2BeGU88KCeqec',
+			'merchant_id': 'wehelptest_TAISHIN',
 			'details': 'TapPay Test',
 			'amount': order.order.price,
 			'cardholder':{
@@ -296,16 +250,20 @@ async def post_order(res: Request,order: OrderForm):
 			},
 			'remember': True
 		}
-		
-		#跑tapPay交易
-		async with httpx.AsyncClient() as client :
-			response = await client.post(tapPayURL, headers={
+		headers={
 				'Content-Type': 'application/json',
 				'x-api-key': partnerKey
-			}, json = payByPrime)
+			}
+		#跑tapPay交易
 		
-		#付款成功or失敗
-		result = await response.json()
+
+		async with httpx.AsyncClient() as client :
+			response = await client.post(tapPayURL, headers=headers
+			, json = payByPrime)
+			#付款成功or失敗
+			result =  response.json()
+			
+	
 		#付款成功status=0(int)
 		payment_status = result['status']
 		if payment_status != 0:
@@ -319,8 +277,16 @@ async def post_order(res: Request,order: OrderForm):
 				'status': 0,
 				'message': '付款成功'
 			}
+			#標記paymentstatus
 			cursor.execute(
 				'UPDATE booking SET payment_status = TRUE WHERE order_number = %s',(order_number, )
+			)
+			con.commit()
+			#重置訂購
+			cursor.execute(
+			'''
+			UPDATE member SET attractionID = NULL, date = NULL, time = NULL, price = NULL WHERE id =%s;
+			''',(user_id, )
 			)
 			con.commit()
 
@@ -339,7 +305,7 @@ async def post_order(res: Request,order: OrderForm):
 
 ### 根據訂單編號取得訂單資訊
 @app.get('/api/orders/{orderNumber}', response_class= JSONResponse)
-def getOrder(res: Request, order_number: str):
+def getOrder(res: Request, orderNumber: str):
 	#登入驗證
 	token = res.headers.get('Authorization')
 	if not token:
@@ -356,17 +322,15 @@ def getOrder(res: Request, order_number: str):
 		#獲取訂單資訊
 		cursor.execute(
 			'''
-				SELECT order_number, price, attractionID, date, time, booking_name, emial, phone, payment_status 
-				FROM booking WHERE user_id = %s AND order_number = %s
-			''',(user_id, order_number)
+				SELECT order_number, price, attractionID, date, time, booking_name, email, phone, payment_status 
+				FROM booking WHERE order_number = %s
+			''',(orderNumber, )
 		)
 
 		orderInfor = cursor.fetchone()
+		if not orderInfor:
+			return JSONResponse(content={'error':True,'message':'未查找到此訂單'},status_code=400)
 		
-		if orderInfor[8] == True:
-			payment_status = 0
-		else: 
-			payment_status = 1
 
 		attractionID = orderInfor[2]
 		if attractionID:
@@ -387,7 +351,7 @@ def getOrder(res: Request, order_number: str):
 					'address': attractionInfor[1],
 					'image': image
 				},
-				'date': orderInfor[3],
+				'date': orderInfor[3].strftime('%Y-%m-%d'),
 				'time': orderInfor[4],
 			},
 			'contact': {
@@ -395,9 +359,11 @@ def getOrder(res: Request, order_number: str):
 				'email': orderInfor[6],
 				'phone': orderInfor[7]
 			},
-			'status': payment_status
+			'status': orderInfor[8]
 		}	
-		return OrderCheckdata(content={'data': data}, status_code = 200)
+		print('傳送資料',data)
+		return JSONResponse(content={'data': data}, status_code = 200)
+		
 	except mysql.connector.Error as e:
 		print(f'Error:{e}')
 		return JSONResponse(content={"error":True,'message':'連線錯誤，請重新嘗試'},status_code=500)
@@ -730,9 +696,9 @@ async def mrt_station():
 
 
 
-if __name__=='__main__':
-	import uvicorn
-	uvicorn.run(app, host='0.0.0.0', port=8000)
 # if __name__=='__main__':
 # 	import uvicorn
-# 	uvicorn.run(app, host='127.0.0.1', port=8000)
+# 	uvicorn.run(app, host='0.0.0.0', port=8000)
+if __name__=='__main__':
+	import uvicorn
+	uvicorn.run(app, host='127.0.0.1', port=8000)

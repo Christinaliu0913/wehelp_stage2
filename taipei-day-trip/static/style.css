@@ -831,21 +831,22 @@ header{
     margin-top: 80px;
 }
 .thankcard-box{
-    display: flex;
-    align-items: center;
     border-radius: 5px;
     box-shadow: 0px 0px 10px #66666650;
     height: auto;
     padding: 30px;
     width: 400px;
 }
+.thankcard-orderIcon{
+    display: flex;
+    justify-content: center;
+}
 .thankcard-orderIcon img{
     width: 40px;
     height: 40px;
 }
-.thankcard-infor{
-    flex: auto;
-    margin-left: 20px;
+.thankcard-infor div{
+    text-align: center;
 }
 .thank-inform{
     display: flex;
@@ -853,7 +854,19 @@ header{
     margin-top: 20px;
 }
 
-
+.repay{
+    height: 36px;
+    width:50%;
+    border: 0;
+    border-radius: 5px;
+    background-color: #448899;
+    cursor: pointer;
+    color: white;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-size: 19px;
+    font-weight: normal;
+}
 
 /*footer*/
 .footer{
