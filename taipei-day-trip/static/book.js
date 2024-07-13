@@ -57,7 +57,8 @@ function bookForm(){
     fetch(bookingURL,{
         method:'GET',
         headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
         }
     })
     .then(res=>res.json())
@@ -193,25 +194,6 @@ TPDirect.card.setup({
   }
 });
 
-// TPDirect.card.onUpdate(update => {
-//   if (update.canGetPrime) {
-//     //全部欄位皆為正確 可以呼叫 getPrime
-//     //確保按鈕在所有字段正確時可以用
-//     document.getElementById('reserve-button').disabled = false;
-//   } else {
-//     document.getElementById('reserve-button').disabled = true;
-//   }
-
-//   updateStatus(update.status.number);
-//   updateStatus(update.status.expiry);
-//   updateStatus(update.status.ccv);
-
-//   console.log('Card Number Status:', update.status.number);
-//   console.log('Expiration Date Status:', update.status.expiry);
-//   console.log('CCV Status:', update.status.ccv);
-// });
-  
-
 
 
 //用於更新狀態的函數，可以根據需要擴展
@@ -303,7 +285,7 @@ async function sendPrimeToSever(prime){
         price: bookPrice,
         trip:{
           attraction:{
-            id: attractionId,
+            attractionId: attractionId,
             name: attractionName,
             address: attractionAddress,
             image: attractionImg
@@ -325,10 +307,11 @@ async function sendPrimeToSever(prime){
 
 //---------------------------
 function postOrder(bookingForm){
+  console.log('sending JSON', JSON.stringify(bookingForm));
   fetch('/api/orders',{
     method: "POST",
     headers: {
-      'Authorization':`Bearer ${token}`,
+      'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(bookingForm)
@@ -342,8 +325,8 @@ function postOrder(bookingForm){
     }else{
       alert('訂購成功')
       console.log(result.detail)
-      console.log('outcome:',result)
     }
+    console.log(result)
   }).catch(error => {
   alert(error.message)
   console.log('Error:',error)
@@ -351,37 +334,3 @@ function postOrder(bookingForm){
 }
 
 
-
-//--------------------------------
-
-    //使用sever端API請求來處理付款
-  //   const orderResponse = await fetch(orderURL,{
-  //     method: "POST",
-  //     headers: {
-  //         'Authorization': `Bearer ${token}`,
-  //         'Content-Type': 'application/json',
-          
-  //     },
-  //     body: JSON.stringify(bookingForm),
-  //     redirect: 'manual'//
-  //   });
-
-  //   if(!orderResponse.ok){
-  //     const errorText = await orderResponse.text();
-  //     console.error('Network response was not ok', orderResponse.status,errorText)
-  //     throw new Error(`Network response was not ok: ${orderResponse.statusText} (status: ${orderResponse.status})`)
-  //   }
-
-  //   const orderData =await orderResponse.json();
-    
-  //   if(orderData.ok){
-  //     alert('訂單建立成功')
-  //     window.location.href='/thankyou';
-  //   }else{
-  //     alert(orderData.message);
-  //   }
-  // }catch(error){
-  //   console.error('Error:',error);
-  //   alert(error.message)
-  // }  
-  

@@ -17,6 +17,7 @@ import secrets
 from passlib.context import CryptContext
 import json
 import httpx
+import logging
 
 app=FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -98,7 +99,7 @@ db={
 	"user":"root",
 	"host":"localhost",
 	"database":"taipei",
-	"password":"ASdf1234."
+	"password":"12345678"
 }
 def connect_sql():
 	con = mysql.connector.connect(**db)
@@ -122,9 +123,16 @@ async def thankyou(request: Request):
 # -------------------處理錯誤->導回首頁---------------------------|
 
 ### 當請求驗證錯誤的時候 
-@app.exception_handler(RequestValidationError)
-async def validation_exception(req: Request, exc: RequestValidationError):
-	return RedirectResponse(url='/')
+# @app.exception_handler(RequestValidationError)
+# async def validation_exception(req: Request, exc: RequestValidationError):
+# 	return RedirectResponse(url='/')
+
+# @app.exception_handler(HTTPException)
+# async def http_exception_handler(req: Request, exc: HTTPException):
+# 	return JSONResponse(
+# 		status_code= exc.status_code,
+# 		content={'message': exc.detail},
+	# )
 ### 處理其他異常
 # @app.exception_handler(Exception)
 # async def global_exception(req: Request, exc: Exception):
@@ -195,9 +203,58 @@ tapPayURL = 'https://sandbox.tappaysdk.com/tpc/payment/pay-by-prime'
 partnerKey = 'partner_XwOOWRbXKjjZZjmDtUNIcQvwDQwlcJ7tlyrF4bsK3sp2BeGU88KCeqec'
 merchantID = 'kyc_wehelptest_NCCC_KYC_Verification_Only'
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+@app.post('/pay')
+async def pay(res: Request,booking: OrderForm):
+	try:
+		prime = booking.prime
+		order = booking.order
+
+		token = res.headers.get('Authorization')
+		if not token:
+			raise HTTPException(detail={"error":True,"message":"未登入系統"},status_code=403)
+		token = token.split(' ')[1]
+		payload = verify_token(token)
+		user_id = payload['user_id']
+		
+		tappay_payload ={
+			'prime': prime,
+			'partner_key': partnerKey,
+			'merchant_id': merchantID,
+			'amount': order.price,
+			'details': 'test pay',
+			'cardholder': {
+				'phone_number': order.contact.phone,
+				'name': order.contact.name,
+				'email': order.contact.email
+			},
+			'remember': True
+		}
+		headers = {
+			'Content-Type':'application/json',
+			'x-api-key': partnerKey
+		}
+		
+		logger.info("Sending request to TapPay")
+		async with httpx.AsyncClient() as client: # 修改點 1: 使用 httpx.AsyncClient 进行异步请求
+			response = await client.post(tapPayURL, headers=headers, json=tappay_payload)
+			result = response.json()
+			
+		logger.info("Received response from TapPay")
+		if response.status_code != 200 or result["status"] != 0:
+			raise HTTPException(status_code=400, detail=f"Payment failed: {result.get('msg', 'unknown error')}")
+		
+		return {
+            "message": "Payment succeeded",
+            "details": result
+        }
+	except Exception as e:
+		logger.error(f"Error processing payment: {e}") # 修改點 2: 添加详细的日志和错误处理
+		raise HTTPException(status_code=500, detail="Internal Server Error")
 
 ### 建立新的訂單，並完成付款程序
-@app.get('/api/orders', response_class= JSONResponse)
+@app.post('/api/orders', response_class= JSONResponse)
 async def post_order(res: Request,order: OrderForm):
 	#登入驗證
 	token = res.headers.get('Authorization')
@@ -274,7 +331,8 @@ async def post_order(res: Request,order: OrderForm):
 		return JSONResponse(content={'data': data}, status_code= 200)
 		
 	except Exception as e:
-		return JSONResponse(content={"error":True,"message":f"{e}連線錯誤，請重新註冊",},status_code=500)
+		logger.error(f"Error processing payment: {e}")  
+		return JSONResponse(content={"error": True, "message": f"{e}連線錯誤，請重新註冊"}, status_code=500)
 	finally:
 		cursor.close()
 		con.close()
