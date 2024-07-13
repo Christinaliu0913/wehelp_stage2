@@ -100,7 +100,7 @@ db={
 	"user":"root",
 	"host":"localhost",
 	"database":"taipei",
-	"password":"12345678"
+	"password":"ASdf1234."
 }
 def connect_sql():
 	con = mysql.connector.connect(**db)
@@ -696,9 +696,9 @@ async def mrt_station():
 
 
 
-# if __name__=='__main__':
-# 	import uvicorn
-# 	uvicorn.run(app, host='0.0.0.0', port=8000)
 if __name__=='__main__':
 	import uvicorn
-	uvicorn.run(app, host='127.0.0.1', port=8000)
+	uvicorn.run(app, host='0.0.0.0', port=8000)
+# if __name__=='__main__':
+# 	import uvicorn
+# 	uvicorn.run(app, host='127.0.0.1', port=8000)
