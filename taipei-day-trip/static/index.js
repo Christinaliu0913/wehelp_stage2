@@ -92,8 +92,7 @@ function booking(){
     const errorMessage = document.getElementById('signUpError');
     //檢查是否所有格子已填寫
     if(!signUpName || !signUpEmail || !signUpPassword){
-      alert('請填妥所有資訊');
-      errorMessage.textContent = '';
+      errorMessage.textContent = '請填妥所有資訊';
       return;
     }
 
@@ -128,8 +127,7 @@ function booking(){
     signInError.textContent = '';
 
     if(!signInEmail || !signInPassword){
-      alert('請填入帳號與密碼');
-      signInError.textContent = '';
+      signInError.textContent = '請填入帳號與密碼';
       return ;
     }
 
@@ -152,7 +150,6 @@ function booking(){
       }else{
         //將token儲存至localStorage
         localStorage.setItem('token', result.token)
-        alert('成功登入！');
         signinClose();
         Showsigned();
         document.querySelector('#signin-form').reset();

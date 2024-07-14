@@ -81,8 +81,7 @@ function booking(){
       const errorMessage = document.getElementById('signUpError');
       //檢查是否所有格子已填寫
       if(!signUpName || !signUpEmail || !signUpPassword){
-        alert('請填妥所有資訊');
-        errorMessage.textContent = '';
+        errorMessage.textContent = '請填妥所有資訊';
         return;
       }
 
@@ -117,8 +116,7 @@ function booking(){
     signInError.textContent = '';
 
     if(!signInEmail || !signInPassword){
-      alert('請填入帳號與密碼');
-      signInError.textContent = '';
+      signInError.textContent = '請填入帳號與密碼';
       return ;
     }
 
@@ -141,7 +139,6 @@ function booking(){
       }else{
         //將token儲存至localStorage
         localStorage.setItem('token', result.token)
-        alert('成功登入！');
         signinClose();
         Showsigned();
         document.querySelector('#signin-form').reset();
@@ -386,13 +383,13 @@ document.getElementById('bookingForm').addEventListener('submit',function(event)
   .then(res => res.json())
   .then(result => {
     if(result.ok){
-      alert('預定成功');
+      document.querySelector('#reserve-alert').textContent = "成功預訂";
+      document.querySelector('#checkBooking').textContent = "點擊查看預定行程"
     }else{
-      alert(result.message);
+      document.querySelector('#reserve-alert').textContent = result.message;
     }
   })
   .catch(error => {
-    console.error('Error',error);
-    alert(error.message);
+    document.querySelector('#reserve-alert').textContent = error.message;
   })
   });

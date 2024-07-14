@@ -305,7 +305,6 @@ function postOrder(bookingForm){
       console.log(result.message);
       return;
     }else{
-      alert('訂購成功')
       console.log('content:',result);
       window.location.href=`/thankyou?orderNumber=${result.data.number}`
     }

@@ -10,9 +10,9 @@ window.addEventListener('load',function(){
         console.log(`orderNumber: ${orderNumber}`);
         getOrderAPI(orderNumber);
     }else{
-        alert('查無此訂單')
+        document.querySelector('#img').src='/static/img/warning.png';
+        document.querySelector('#paymentStatus').textContent = '查無此訂單'
         console.log('not valid orderNumber')
-        window.location.href = '/'
     }
     
 });
@@ -104,4 +104,17 @@ async function checkSigned(){
     localStorage.removeItem('token');
     alert('成功登出！');
     window.location.href='/';
+  }
+
+
+//|------------------預定行程-----------------------|
+//提醒登入狀態
+function booking(){
+    //提醒登入狀態
+    if (token){
+      window.location.href = '/booking';
+    }else{
+      alert('先請登入系統');
+      signIn();
+    }
   }
