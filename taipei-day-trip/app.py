@@ -18,7 +18,10 @@ from passlib.context import CryptContext
 import json
 import httpx
 import logging
-import requests
+from dotenv import load_dotenv, dotenv_values
+import os 
+
+
 
 app=FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -29,6 +32,22 @@ app.add_middleware(
     allow_methods=["*"], #允許所有HTTP方法(get,post,put....)
     allow_headers=["*"], #允許所有標頭(headers)
 )
+
+# KEY setting
+
+load_dotenv('.env.develop')
+## sql
+db_database = os.getenv('DB_DATABASE')
+db_password_local = os.getenv('DB_PASSWORD')
+db_passowrd = os.getenv('DB_PASSWORD')
+
+## tappay
+merchantID = os.getenv('TAPPAY_MERCHANT_ID')
+partnerKey = os.getenv('TAPPAY_PARTNER_KEY')
+
+print(f'DB_DATABASE:',db_database)
+print(f'DB_PASSWORD:',db_password_local)
+
 #---------------------BaseModel資料型態----------------------|
 ### User 資料型態
 class User(BaseModel):
@@ -99,8 +118,8 @@ class OrderCheckdata(BaseModel):
 db={
 	"user":"root",
 	"host":"localhost",
-	"database":"taipei",
-	"password":"ASdf1234."
+	"database":db_database,
+	"password":db_password_local
 }
 def connect_sql():
 	con = mysql.connector.connect(**db)
@@ -201,8 +220,6 @@ def verify_token(token:str):
 ## -------------------------------------API Order------------------------------------------
 ### TapPay setting
 tapPayURL = 'https://sandbox.tappaysdk.com/tpc/payment/pay-by-prime'
-partnerKey = 'partner_XwOOWRbXKjjZZjmDtUNIcQvwDQwlcJ7tlyrF4bsK3sp2BeGU88KCeqec'
-merchantID = 'wehelptest_CTBC_Union_Pay'
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

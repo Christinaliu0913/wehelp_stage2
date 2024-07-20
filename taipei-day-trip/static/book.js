@@ -131,6 +131,7 @@ function deleteBooking(){
 //-------------TapPay設定與串接----------------------
 
 //初始化，從後台獲取專案ID,api token
+//下載dotenv 讀取.env文件
 
 TPDirect.setupSDK(
   151966,
