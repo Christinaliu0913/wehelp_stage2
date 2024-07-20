@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" type='text/css' href="/static/style.css">
   <title>Booking</title>
+  <script src="https://js.tappaysdk.com/tpdirect/v5.13.1"></script>
+  <script>
+    
+  </script>
 </head>
 <body>
   <div class="wrapper">
@@ -36,10 +40,10 @@
             <div class="info-detail">
               <div class="info-detail-title">台北一日遊：</div>
               <div>
-                <p>日期：<span id="bookDate">1123412341</span></p>
-                <p>時間：<span id="bookTime">2123412341234</span></p>
-                <p>費用：<span id="bookFee">31234123412</span></p>
-                <p>地點：<span id="attractionAddress">4123412341</span></p>
+                <p>日期：<span id="bookDate"></span></p>
+                <p>時間：<span id="bookTime"></span></p>
+                <p>費用：<span id="bookFee"></span></p>
+                <p>地點：<span id="attractionAddress"></span></p>
               </div>
             </div>  
             <div class="info-delete"><button id="info-delete-button" onclick="deleteBooking()">
@@ -51,36 +55,49 @@
       </div>
       <hr class="middleLine">
       <!--------------聯絡資訊--------------->
-      <div class="bookProfile">
-        <div class="bookProfile-box">
-          <h3>您的聯絡資訊</h3>
-          <div>聯絡姓名：<input name='name' type="text"></div>
-          <div>聯絡信箱：<input name="email" type="email"></div>
-          <div>手機號碼：<input name="phone" type="number" placeholder="0912345678"></div>
-          <p>請保持手機暢通，準時到達，導覽人員將用手機與您聯絡，務必留下正確的聯絡方式</p>
+      <form> 
+        <div class="bookProfile">
+          <div class="bookProfile-box">
+            <h3>您的聯絡資訊</h3>
+            <div>聯絡姓名：<input id="user-name" name='name' type="text"></div>
+            <div>聯絡信箱：<input id="user-email" name="email" type="email"></div>
+            <div>手機號碼：<input id='user-phone' name="phone" type="number" placeholder="0912345678"></div>
+            <p>請保持手機暢通，準時到達，導覽人員將用手機與您聯絡，務必留下正確的聯絡方式</p>
+          </div>
         </div>
-      </div>
       <hr class="middleLine">
       <!--------------付款資訊--------------->
+    
       <div class="bookPay">
         <div class="bookPay-box">
           <h3>信用卡付款資訊</h3>
-          <div>卡片號碼：<input type="text" placeholder="**** **** **** ****" pattern="\d{4} \d{4} \d{4} \d{4}" required></div>
-          <div>過期時間：<input type="text" placeholder="MM/YY" pattern="\d{2}/\d{2}" required></div>
-          <div>驗證密碼：<input type="text" placeholder="CVN" pattern="\d{3}" required ></div>
+          <div class="bookPay-box-input">
+            <label for="card-number">卡片號碼：</label>
+            <div id="card-number" class="bookPay-input"></div>
+          </div>
+          <div class="bookPay-box-input">
+            <label for="card-expiration-date">過期時間：</label>
+            <div id="card-expiration-date" class="bookPay-input"></div>
+          </div>
+
+          <div class="bookPay-box-input">
+            <label for="ccv" >驗證密碼：</label>
+            <div id="ccv" class="bookPay-input"></div>
+          </div>
+
         </div>
       </div>
       <hr class="middleLine">
       <!--------------訂購付款--------------->
       <div class="bookSum">
         <div class="bookSum-box">
-          <form>
+          <div>
             <div id="sumupPrice"></div>
-            <button>確認訂購並付款</button>
-          </form>
+            <button id="reserve-button" type="submit">確認訂購並付款</button>
+          </div>
         </div>
       </div>
-
+    </form>
     </div>
   </div>
 
@@ -88,5 +105,6 @@
   <footer class="footer"><p class="footer-text">COPYRIGHT©2024台北一日遊</p></footer>
   <script src="/static/book.js">
   </script>
+  
 </body>
 </html>

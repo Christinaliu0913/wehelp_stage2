@@ -763,7 +763,12 @@ header{
     justify-content: center;
     margin: 0px 10px;
 }
-.bookPay-box input{
+.bookPay-box-input{
+    display: flex;
+    align-items: center;
+    margin: 0px;
+}
+.bookPay-inpu{
     height: 38px;
     max-width: 200px;
     margin-left: 10px;
@@ -771,12 +776,20 @@ header{
     border: solid 1px #E8E8E8;
     text-indent: 10px;
 }
+.bookPay-input{
+    max-width: 145px;
+    height: 42px;
+    border: 1px solid #E8E8E8;
+    border-radius: 5px;
+    box-sizing: border-box;
+    text-indent: 10px;
+    padding: 10px;
+    margin: 5px 0px 5px 10px
+}
 .bookPay-box input::placeholder {
     color: #a6a6a6;
 }
-.bookPay-box div{
-    margin: 10px 0px;
-}
+
 .bookPay-box p{
     font-weight: bold;
 }
@@ -793,7 +806,7 @@ header{
     justify-content: flex-end;
     margin: 0px 10px;
 }
-.bookSum-box form div {
+.bookSum-box div {
     text-align: right;
     margin: 5px;
     font-weight: bold;
@@ -811,6 +824,50 @@ header{
     font-size: 19px;
     cursor: pointer;
 }
+/*----------thank you---------*/
+.thankcard{
+    display: flex;
+    justify-content: center;
+    margin-top: 80px;
+}
+.thankcard-box{
+    border-radius: 5px;
+    box-shadow: 0px 0px 10px #66666650;
+    height: auto;
+    padding: 30px;
+    width: 400px;
+}
+.thankcard-orderIcon{
+    display: flex;
+    justify-content: center;
+}
+.thankcard-orderIcon img{
+    width: 40px;
+    height: 40px;
+}
+.thankcard-infor div{
+    text-align: center;
+}
+.thank-inform{
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.repay{
+    height: 36px;
+    width:50%;
+    border: 0;
+    border-radius: 5px;
+    background-color: #448899;
+    cursor: pointer;
+    color: white;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-size: 19px;
+    font-weight: normal;
+}
+
 /*footer*/
 .footer{
     min-height: 200px;

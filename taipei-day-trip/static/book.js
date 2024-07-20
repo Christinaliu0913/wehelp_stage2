@@ -1,6 +1,6 @@
 const getTokenURL = '/api/user/auth' 
 const token = localStorage.getItem('token');//從local端獲取token
-const bookingURL = '/api/booking'
+
 //-------------------load---------------------------|
 window.addEventListener('load',function(){
     //確認登入情形
@@ -55,13 +55,15 @@ async function checkSigned(){
 //---------------fetch預定的資料-------------
 function bookForm(){
     fetch(bookingURL,{
-        'method':'GET',
-        'headers': {
-            'Authorization': `Bearer ${token}`
+        method:'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
         }
     })
     .then(res=>res.json())
     .then(result => {
+        console.log(result)
         renderBook(result);
     })
     .catch(error => {
@@ -124,3 +126,193 @@ function deleteBooking(){
     })
 }
     
+
+
+//-------------TapPay設定與串接----------------------
+
+//初始化，從後台獲取專案ID,api token
+//下載dotenv 讀取.env文件
+
+TPDirect.setupSDK(
+  151966,
+  'app_1QnD3OTAcbpXSZiXnvUsPUvaC8fm51s2LWVHzzuOXiZpRrfwbtzzPzh5Qnlo',
+  'sandbox'
+);
+
+//設置信用卡表單
+
+TPDirect.card.setup({
+  fields: {
+    number:{
+      element:'#card-number',
+      placeholder: '**** **** **** ****'
+    },
+    expirationDate:{
+      element:'#card-expiration-date',
+      placeholder: 'MM/YY'
+    },
+    ccv:{
+      element: '#ccv',
+      placeholder: 'CCV'
+    }
+  },
+  styles: {
+    'input': {
+        'color': '#a6a6a6',
+        'font-size': '14px'
+    },
+    ':focus': {
+        'color': 'blue'
+    },
+    '.valid': {
+        'color': 'green'
+    },
+    '.invalid': {
+        'color': 'red'
+    },
+    '@media screen and (max-width: 400px)': {
+        'input': {
+            'color': 'orange'
+        }
+    }
+  }
+});
+
+
+
+//用於更新狀態的函數，可以根據需要擴展
+function updateStatus(status){
+  console.log('status', status);
+}
+  
+
+
+//表單提交
+
+document.getElementById('reserve-button').addEventListener('click',function(event){
+  event.preventDefault();
+
+  
+  //確認所有格子填妥
+  const name = document.getElementById('user-name').value.trim();
+  const email = document.getElementById('user-email').value.trim();
+  const phone = document.getElementById('user-phone').value.trim();
+ 
+  //取得TapPay fields 的status
+  const tappayStatus = TPDirect.card.getTappayFieldsStatus()
+  //確認是否可以 GetPrime
+  if (tappayStatus.canGetPrime === false || !name || !email || !phone){
+    alert('請填妥完整資訊');
+    console.log('TapPay fields Status:', tappayStatus)
+    return
+  }
+
+  //Get Prime
+
+  TPDirect.card.getPrime(async function(result){
+    if (result.status !== 0){
+      alert('取得Token失敗: ' +result.msg)
+      console.log('Error:', result);
+      return;
+    }
+    //將prime傳送到sever端
+    const prime = result.card.prime;
+    sendPrimeToSever(prime);
+
+  });
+});
+
+const bookingURL = '/api/booking'
+const orderURL = '/api/orders'
+
+//將prime傳送到sever端
+async function sendPrimeToSever(prime){
+    const setPrime = prime
+    //獲取會員資料
+    const userData = JSON.parse(localStorage.getItem('user_data'))
+    const userName = userData.name;//獲取用戶名
+    const userEmail = userData.email;//獲取用戶email
+    const userPhone = document.querySelector('#user-phone').value.trim()//獲取用戶手機
+
+    
+    //獲取景點資料
+    const bookingResponse = await fetch(bookingURL,{
+      method:'GET',
+      headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+      }
+    });
+
+    if(!bookingResponse.ok){
+      throw new Error('failed to fetch booking data')
+    }else{
+      console.log('success to fetch booking')
+    }
+
+    const result = await bookingResponse.json();
+
+    console.log(result);
+    const attractionData = result.data.attraction;
+    const attractionId = attractionData.id;
+    const attractionName = attractionData.name;
+    const attractionAddress = attractionData.address;
+    const attractionImg = attractionData.image;
+    const bookDate = result.data.date;
+    const bookTime = result.data.time;
+    const bookPrice = result.data.price;
+
+    const bookingForm = {
+      prime: setPrime,
+      order: {
+        price: bookPrice,
+        trip:{
+          attraction:{
+            attractionId: attractionId,
+            name: attractionName,
+            address: attractionAddress,
+            image: attractionImg
+          },
+          date: bookDate,
+          time: bookTime
+        },
+        contact: {
+          name: userName,
+          email: userEmail,
+          phone: userPhone
+        }
+      }
+    }
+    console.log(bookingForm);
+    postOrder(bookingForm);
+};
+
+
+//---------------------------
+function postOrder(bookingForm){
+  console.log('sending JSON', JSON.stringify(bookingForm));
+  fetch('/api/orders',{
+    method: "POST",
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(bookingForm)
+  }).then(req => 
+    req.json()
+  ).then(result =>{
+    if(result.error){
+      alert(result.message);
+      console.log(result.message);
+      return;
+    }else{
+      console.log('content:',result);
+      window.location.href=`/thankyou?orderNumber=${result.data.number}`
+    }
+  }).catch(error => {
+  alert(error.message)
+  console.log('Error:',error)
+  })
+}
+
+
