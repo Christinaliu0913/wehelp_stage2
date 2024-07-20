@@ -118,8 +118,8 @@ class OrderCheckdata(BaseModel):
 db={
 	"user":"root",
 	"host":"localhost",
-	"database":db_database,
-	"password":db_passowrd
+	"database":'taipei',
+	"password":"ASdf1234."
 }
 def connect_sql():
 	con = mysql.connector.connect(**db)
