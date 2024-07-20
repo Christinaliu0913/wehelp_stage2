@@ -38,7 +38,7 @@ app.add_middleware(
 load_dotenv('.env.develop')
 ## sql
 db_database = os.getenv('DB_DATABASE')
-db_password_local = os.getenv('DB_PASSWORD')
+db_password_local = os.getenv('DB_PASSWORD_LOCAL')
 db_passowrd = os.getenv('DB_PASSWORD')
 
 ## tappay
@@ -119,7 +119,7 @@ db={
 	"user":"root",
 	"host":"localhost",
 	"database":db_database,
-	"password":db_password_local
+	"password":db_passowrd
 }
 def connect_sql():
 	con = mysql.connector.connect(**db)
