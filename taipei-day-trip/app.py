@@ -119,7 +119,7 @@ db={
 	"user":"root",
 	"host":"localhost",
 	"database":'taipei',
-	"password":"ASdf1234."
+	"password":db_passowrd
 }
 def connect_sql():
 	con = mysql.connector.connect(**db)
