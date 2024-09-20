@@ -20,11 +20,15 @@ import httpx
 import logging
 from dotenv import load_dotenv, dotenv_values
 import os 
+from dotenv import load_dotenv
+
 
 
 
 app=FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  #允許所有來源的請求
@@ -34,7 +38,6 @@ app.add_middleware(
 )
 
 # KEY setting
-
 load_dotenv('.env.develop')
 ## sql
 db_database = os.getenv('DB_DATABASE')
@@ -114,6 +117,8 @@ class OrderCheckdata(BaseModel):
 	trip: Trip 
 	contact: Contact
 	status: bool
+
+
 #-----------------------連線至mysql-------------------------------|
 db={
 	"user":"root",
